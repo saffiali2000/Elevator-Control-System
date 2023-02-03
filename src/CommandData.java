@@ -5,6 +5,7 @@ import java.time.LocalTime;
  * @author Ashwin Stoparczyk
  *
  */
+
 public class CommandData {
 	private LocalTime time;
 	private int startFloor;

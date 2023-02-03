@@ -22,16 +22,12 @@ public class ElevatorSystem {
 		List<CommandData> commands = Collections.synchronizedList(new ArrayList<CommandData>());
 		
 		//Create Floor, Elevator, and Scheduler threads
-		Thread floor1 = new Floor();
-		Thread floor2 = new Floor();
-		Thread floor3 = new Floor();
+		Thread floor1 = new Floor(commands);
 		Thread elevator1 = new Elevator();
 		Thread scheduler = new Scheduler(commands);
 		
 		//Start threads
 		floor1.start();
-		floor2.start();
-		floor3.start();
 		elevator1.start();
 		scheduler.start();
 	}
