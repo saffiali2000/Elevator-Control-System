@@ -27,9 +27,7 @@ public class Scheduler extends Thread {
 		this.returnFloorList = commands.getReturnFloorList();
 	}
 
-	;
-
-
+	
 	/**
 	 * @Override default run method
 	 */
