@@ -5,7 +5,6 @@ import java.time.LocalTime;
  * @author Ashwin Stoparczyk
  *
  */
-
 public class CommandData {
 	private LocalTime time;
 	private int startFloor;
@@ -13,7 +12,7 @@ public class CommandData {
 	private String dir;
 	
 	/**
-	 * @Constructor
+	 * Constructor
 	 * 
 	 * @param time Time command was made
 	 * @param startFloor Starting floor of elevator
@@ -28,7 +27,9 @@ public class CommandData {
 	}
 
 
-	//Getters and setters for CommandData fields
+	/**
+	 * Getters and setters for CommandData fields
+	 */
 	public LocalTime getTime() {
 		return time;
 	}
@@ -59,7 +60,5 @@ public class CommandData {
 
 	public void setDir(String dir) {
 		this.dir = dir;
-	}
-		
-	
+	}	
 }
