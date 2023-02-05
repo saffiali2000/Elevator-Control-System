@@ -7,11 +7,11 @@ import java.util.*;
  */
 public class ElevatorCommands {
 	
-	ArrayList<CommandData> floorCommands;
-	ArrayList<CommandData> elevatorCommands;
+	private ArrayList<CommandData> floorCommands;
+	private ArrayList<CommandData> elevatorCommands;
 
-	ArrayList<CommandData> returnFloorCommands;
-	ArrayList<CommandData> returnElevatorCommands;
+	private ArrayList<CommandData> returnFloorCommands;
+	private ArrayList<CommandData> returnElevatorCommands;
 	
 	/**
 	 * Constructor
