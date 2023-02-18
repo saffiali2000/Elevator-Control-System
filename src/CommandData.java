@@ -10,6 +10,8 @@ public class CommandData {
 	private int startFloor;
 	private int destFloor;
 	private String dir;
+	private String source;
+	private String dest;
 	
 	/**
 	 * Constructor
@@ -19,11 +21,13 @@ public class CommandData {
 	 * @param destFloor Destination floor of elevator
 	 * @param dir Direction from starting to destination floor (up or down)
 	 */
-	public CommandData(LocalTime time, int startFloor, int destFloor, String dir){
+	public CommandData(LocalTime time, int startFloor, int destFloor, String dir, String source, String dest){
 		this.setTime(time);
 		this.setStartFloor(startFloor);
 		this.setDestFloor(destFloor);
 		this.setDir(dir);
+		this.setSource(source);
+		this.setDest(dest);
 	}
 
 
@@ -60,5 +64,21 @@ public class CommandData {
 
 	public void setDir(String dir) {
 		this.dir = dir;
-	}	
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getDest() {
+		return dest;
+	}
+
+	public void setDest(String dest) {
+		this.dest = dest;
+	}
 }

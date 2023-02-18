@@ -9,7 +9,6 @@ import java.util.ArrayList;
 public class Floor extends Thread {
 	private ElevatorCommands commands;
 	public ArrayList<CommandData> floorList;
-	public ArrayList<CommandData> floorReturnList;
 	private CommandData commandSent;
 	private CommandData commandConfirmed;
 
@@ -19,8 +18,7 @@ public class Floor extends Thread {
 	 */
 	public Floor(ElevatorCommands commands) {
 		this.commands = commands;
-		this.floorList = commands.getFloorList();
-		this.floorReturnList = commands.getReturnFloorList();
+		this.floorList = new ArrayList<CommandData>();
 		commandSent = null;
 	}
 
@@ -40,10 +38,10 @@ public class Floor extends Thread {
 	 * @param dir Up or down
 	 */
 	public void createCommand(int startFloor, int destFloor, String dir) {
-		synchronized (floorList) {
-			while (commands.getFloorSize() > 0) { //Wait until floor commands list is empty
+		synchronized (commands) {
+			while (commands.getSize() > 0) { //Wait until commands list is empty
 				try {
-					floorList.wait();
+					wait();
 				} catch (InterruptedException e) {
 					return;
 				}
@@ -51,11 +49,11 @@ public class Floor extends Thread {
 			
 			//Create a new command and send it to the Scheduler
 			LocalTime time = LocalTime.now();
-			CommandData command = new CommandData(time, startFloor, destFloor, dir); 
+			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "scheduler");
 			commandSent = command;
-			commands.addFloorCommand(command);
+			commands.addCommand(command);
 			System.out.println("Floor created command and sent to server!");
-			floorList.notifyAll();
+			commands.notifyAll();
 		}
 	}
 
@@ -63,25 +61,32 @@ public class Floor extends Thread {
 	 * Floor waits for its command to be returned to itself by Scheduler, to confirm the command was executed properly
 	 */
 	private void waitForCommand() {
-		synchronized (floorReturnList) {
+		synchronized (commands) {
 			while (commands.getElevatorSize() == 0) { //Wait until commands list is populated
 				try {
-					floorReturnList.wait();
+					wait();
 				} catch (InterruptedException e) {
 					return;
 				}
-								
-				commandConfirmed = commands.getFloorReturn(0);
-				
-				//Check if the returned command is the same as the original command
-				if(commandSent == commandConfirmed) {
-					System.out.println("Floor received command back!");
-					floorReturnList.notifyAll();
-					System.exit(0);
+
+				boolean validCommand = false;
+
+				//Iterate through commands to check for a command going from scheduler to this floor, which must be a returning command
+				for (CommandData cd : commands){
+					if (cd.getSource().equals("scheduler") && cd.getDest().equals("floor")){
+						commandConfirmed = commands.getFloorReturn(0);
+						validCommand = true;
+					}
 				}
-				else {
-					System.out.println("Floor received incorrect command back.");
-					floorReturnList.notifyAll();
+
+				//If floor found a returning command compare it to the one it sent previously
+				if (validCommand) {
+					//Check if the returned command is the same as the original command
+					if (commandSent == commandConfirmed) {
+						System.out.println("Floor received command back!");
+					} else {System.out.println("Floor received incorrect command back.");}
+
+					commands.notifyAll();
 					System.exit(0);
 				}
 			}
