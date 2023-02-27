@@ -6,8 +6,8 @@ import java.util.ArrayList;
  *
  */
 public class Scheduler extends Thread {
-	private ElevatorCommands commands;
-	private CommandData currentCommand;
+	private ElevatorCommands commands; //Shared command list
+	private CommandData currentCommand; //Currently-managed command
 
 	/**
 	 * Constructor
@@ -22,10 +22,9 @@ public class Scheduler extends Thread {
 	 * @Override default run method
 	 */
 	public void run() {
-		sortCommands();
-		sendCommand();
-		sortCommands();
-		sendCommand();
+		while (true) {
+			sortCommands();
+		}
 	}
 
 	/**
@@ -43,10 +42,16 @@ public class Scheduler extends Thread {
 				}
 			}
 			
-			//Sort list
-			//Sorting not yet implemented
+			//Sort list here
 			System.out.println("Server received command and sorting!");
 			currentCommand = commands.getCommand(0); //Selects next command to be moved
+
+			//Decide if command is valid needs to be refined
+			if (currentCommand.getDir() != "up" || currentCommand.getDir() != "down" || currentCommand.getDest() != "floor" || currentCommand.getDest() != "server" || currentCommand.getDest() != "elevator" ||
+					currentCommand.getSource() != "floor" || currentCommand.getSource() != "server" || currentCommand.getSource() != "elevator") {
+				System.out.println("Command invalid. Removing");
+				currentCommand = null;
+			} else {sendCommand();}
 			commands.notifyAll();
 		}
 	}
@@ -56,7 +61,7 @@ public class Scheduler extends Thread {
 	 */
 	private void sendCommand() {
 		synchronized (commands) {
-			while (commands.getSize() < 1) { //Wait until commands list is populated
+			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
 				try {
 					wait();
 				} catch (InterruptedException e) {
@@ -64,17 +69,11 @@ public class Scheduler extends Thread {
 					return;
 				}
 			}
-			
-			//Give command to Elevator
-			if (currentCommand.getSource().equals("floor")){
-				commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", "elevator");
-			} else if (currentCommand.getSource().equals("elevator")){
-				commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", "elevator");
-			}
+			//Change command source to scheduler to mark that it has been processed and add it back to commands list
+			//Command is already checked for validity in sortCommands()
+			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", currentCommand.getDest());
 			System.out.println("Server sent command to elevator!");
 			commands.notifyAll();
+			}
 		}
 	}
-
-
-}
