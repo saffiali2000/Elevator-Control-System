@@ -89,4 +89,12 @@ public class Elevator extends Thread{
 			System.out.println("Elevator sent command back!");
 		}
 	}
+
+	public CommandData getCurrentCommand(){
+		return currentCommand;
+	}
+
+	public void setCurrentCommand(CommandData currentCommand){
+		this.currentCommand = currentCommand;
+	}
 }
