@@ -6,14 +6,9 @@ import java.util.ArrayList;
  *
  */
 public class Scheduler extends Thread {
-	private ElevatorCommands commands;
-	private CommandData currentCommand;
-	private ArrayList<CommandData> floorList;
-	private ArrayList<CommandData> elevatorList;
-
-	private ArrayList<CommandData> returnFloorList;
-
-	private ArrayList<CommandData> returnElevatorList;
+	private ElevatorCommands commands; //Shared command list
+	private CommandData currentCommand; //Currently-managed command
+	private ArrayList<Elevator> elevatorList;
 
 	/**
 	 * Constructor
@@ -21,10 +16,7 @@ public class Scheduler extends Thread {
 	 */
 	public Scheduler(ElevatorCommands commands) {
 		this.commands = commands;
-		this.floorList = commands.getFloorList();
-		this.elevatorList = commands.getElevatorList();
-		this.returnElevatorList = commands.getReturnElevatorList();
-		this.returnFloorList = commands.getReturnFloorList();
+		this.elevatorList = new ArrayList<Elevator>;
 	}
 
 	
@@ -32,95 +24,120 @@ public class Scheduler extends Thread {
 	 * @Override default run method
 	 */
 	public void run() {
-		sortElevatorCommands();
-		notifyElevator();
-		sortReturnCommands();
-		notifyFloor();
+		while (true) {
+			sortCommands();
+		}
 	}
 
 	/**
 	 * Sorts through pending commands and delegates to the proper elevator
 	 * No sorting algorithm yet
 	 */
-	private void sortElevatorCommands() {
-		synchronized (floorList) {
-			while (commands.getFloorSize() == 0) { //Wait until commands list is populated
+	private void sortCommands() {
+		synchronized (commands) {
+			while (commands.getSize() < 1) { //Wait until commands list is populated
 				try {
-					floorList.wait();
+					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					return;
 				}
 			}
-			
-			//Receive command and sort list
-			//Sorting not yet implemented
+
 			System.out.println("Server received command and sorting!");
-			currentCommand = commands.getFloorCommand(0);
-			floorList.notifyAll();
+			currentCommand = commands.getCommand(0); //Selects next command to be moved
+
+			//Decide if command is valid needs to be refined
+			if (currentCommand.getDir() != "up" || currentCommand.getDir() != "down" || currentCommand.getDest() != "floor" || currentCommand.getDest() != "server" || currentCommand.getDest() != "elevator" ||
+					currentCommand.getSource() != "floor" || currentCommand.getSource() != "server" || currentCommand.getSource() != "elevator") {
+				System.out.println("Command invalid. Removing");
+				currentCommand = null;
+			}
+
+			//Sort list here
+
+			Elevator closestElevator = determineClosestElevator();
+
+			if (currentCommand.getDest().equals("elevator") ){
+				sendCommandElevator(closestElevator);
+			} else {sendCommandFloor()};
+
+			commands.notifyAll();
 		}
 	}
 
 	/**
-	 * Scheduler sends a command to an Elevator
+	 * Scheduler sends a command to either an Elevator
+	 * Shell, needs to be updated with UDP
 	 */
-	private void notifyElevator() {
-		synchronized (elevatorList) {
-			while (commands.getElevatorSize() > 0) { //Wait until elevator can accept new command
+	private void sendCommandElevator(Elevator elevator) {
+		synchronized (commands) {
+			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
 				try {
-					elevatorList.wait();
+					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					return;
 				}
 			}
-			
-			//Give command to Elevator
-			commands.addElevatorCommand(currentCommand); 
+
+			//Change command source to scheduler to mark that it has been processed and add it back to commands list
+			//Command is already checked for validity in sortCommands()
+			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", currentCommand.getDest());
 			System.out.println("Server sent command to elevator!");
-			elevatorList.notifyAll();
+			commands.notifyAll();
+			}
 		}
-	}
 
 	/**
-	 * Sorts through commands returned by Elevators
+	 * Scheduler sends a command to a Floor
+	 * Shell, needs to be updated with UDP
 	 */
-	private void sortReturnCommands() {
-		synchronized (returnElevatorList) {
-			while (commands.getReturnESize() == 0) { //Wait until return commands list is populated
+	private void sendCommandFloor() {
+		synchronized (commands) {
+			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
 				try {
-					returnElevatorList.wait();
+					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					return;
 				}
 			}
-			
-			//Add the returned command to the list and sort
-			currentCommand = commands.getElevatorReturn(0); 
-			System.out.println("Server received return command and sorting!");			
-			returnElevatorList.notifyAll();
+
+			//Change command source to scheduler to mark that it has been processed and add it back to commands list
+			//Command is already checked for validity in sortCommands()
+			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", currentCommand.getDest());
+			System.out.println("Server sent command to elevator!");
+			commands.notifyAll();
 		}
 	}
 
 	/**
-	 * Sends a returned command to the floor it originated from, confirming that it was executed properly
+	 * Determines the Elevator closest to the current command's destination
+	 * Algorithm:
+	 * Scheduler first searches for any elevators that are moving towards the destination floor. If at least one exists, only they are considered. Otherwise, all are considered
+	 * Scheduler then determines the elevator that will take the shortest amount of time to reach the destination floor i.e smallest gap in floor difference
 	 */
-	private void notifyFloor() {
-		synchronized (returnFloorList) {
-			while (commands.getElevatorSize() > 0) { //Wait until elevator can accept new command (?)
-				try {
-					returnFloorList.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
+	private Elevator determineClosestElevator(){
+		ArrayList<Elevator> consideredElevators;
+		for (Elevator el : elevatorList){
+			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
+			if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
+					(compCommand.getDestFloor() > currentCommand.getDestFloor() && compCommand.getDir().equals("up"))){
+				consideredElevators.add(el);
 			}
-			
-			//Return command to the floor
-			commands.addFloorReturn(currentCommand); 
-			System.out.println("Server sent command to floor!");
-			returnFloorList.notifyAll();
 		}
+
+		//If no elevators currently moving towards destination floor, consider all elevators
+		if (consideredElevators.isEmpty()) consideredElevators = elevatorList;
+		Elevator closestElevator = elevatorList.get(0);
+		int closest = Math.abs(el.getDestFloor() - closestElevator.getDestFloor());
+
+		//Iterate through considered elevators and choose the one closest to the next floor
+		for (Elevator el : consideredElevators){
+			if (Math.abs(el.getDestFloor() - closestElevator.getDestFloor()) < closest) closestElevator = el;
+		}
+
+		return closestElevator;
 	}
-}
+	}

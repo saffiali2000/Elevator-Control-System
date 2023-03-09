@@ -20,8 +20,6 @@ public class CommandData {
 	 * @param startFloor Starting floor of elevator
 	 * @param destFloor Destination floor of elevator
 	 * @param dir Direction from starting to destination floor (up or down)
-	 * @param source Source of the command ("floor", "scheduler", or "elevator")
-	 * @param dest Destination of the command ("floor", "scheduler", or "elevator")
 	 */
 	public CommandData(LocalTime time, int startFloor, int destFloor, String dir, String source, String dest){
 		this.setTime(time);
