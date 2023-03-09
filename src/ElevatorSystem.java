@@ -7,9 +7,9 @@ import java.util.ArrayList;
  */
 public class ElevatorSystem {
 	
-	public ArrayList<Floor> floors;
-	public ArrayList<Elevator> elevators;
-	public ElevatorCommands commands;
+	public ArrayList<Floor> floors; //List of floors in the system
+	public ArrayList<Elevator> elevators; //List of elevators in the system
+	public ElevatorCommands commands; //Shared list of commands
 	
 	/**
 	 * Constructor
