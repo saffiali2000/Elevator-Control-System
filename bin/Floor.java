@@ -7,10 +7,10 @@ import java.util.ArrayList;
  *
  */
 public class Floor extends Thread {
-	private ElevatorCommands commands; //Shared list of commands
-	//public ArrayList<CommandData> floorList; //Log of all commands sent by this floor
-	private CommandData commandSent; //Original command created and sent to scheduler
-	private CommandData commandConfirmed; //COmmand executed by elevator and returned by scheduler
+	private ElevatorCommands commands;
+	public ArrayList<CommandData> floorList;
+	private CommandData commandSent;
+	private CommandData commandConfirmed;
 
 	/**
 	 * Constructor
@@ -18,7 +18,7 @@ public class Floor extends Thread {
 	 */
 	public Floor(ElevatorCommands commands) {
 		this.commands = commands;
-		//this.floorList = new ArrayList<CommandData>();
+		this.floorList = new ArrayList<CommandData>();
 		commandSent = null;
 	}
 
@@ -27,10 +27,8 @@ public class Floor extends Thread {
 	 * @Override default run method
 	 */
 	public void run() {
-		createCommand(1, 5, "up"); //Read from input file here
-		while (true) {
-			waitForCommand();
-		}
+		createCommand(1, 5, "up");
+		waitForCommand();
 	}
 
 	/**
@@ -45,7 +43,6 @@ public class Floor extends Thread {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
 					return;
 				}
 			}
@@ -72,7 +69,7 @@ public class Floor extends Thread {
 					return;
 				}
 
-				boolean validCommand = false; //Returning command recieved
+				boolean validCommand = false;
 
 				//Iterate through commands to check for a command going from scheduler to this floor, which must be a returning command
 				for (CommandData cd : commands){
@@ -87,7 +84,6 @@ public class Floor extends Thread {
 					//Check if the returned command is the same as the original command
 					if (commandSent == commandConfirmed) {
 						System.out.println("Floor received command back!");
-						//floorList.add(commandSent);
 					} else {System.out.println("Floor received incorrect command back.");}
 
 					commands.notifyAll();
