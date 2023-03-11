@@ -152,8 +152,7 @@ public class Elevator extends Thread{
 
 		//change state here!!
 		subsystem.handleButtonPressed();
-		//need to extract destination floor from the packet
-		//subsystem.setDestination(floor);
+		subsystem.setDestination(currentCommand.getDestFloor());
 		subsystem.handleDoorClosed();
 		subsystem.handleArrived();
 
