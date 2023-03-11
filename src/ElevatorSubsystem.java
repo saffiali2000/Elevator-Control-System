@@ -106,4 +106,28 @@ public class ElevatorSubsystem {
 	public ElevatorState getState() {
 		return currentState;
 	}
+	
+	/**
+	 * Set the destination floor to the given floor.
+	 * @param floor The new destination
+	 */
+	public void setDestination(int floor) {
+		dest = floor;
+	}
+	
+	/**
+	 * Return the current destination floor.
+	 * @return The current destination
+	 */
+	public int getDestination() {
+		return dest;
+	}
+	
+	/**
+	 * Return the current floor.
+	 * @return The current floor
+	 */
+	public int getCurrentFloor() {
+		return curr;
+	}
 }
