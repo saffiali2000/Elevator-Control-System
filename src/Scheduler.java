@@ -37,7 +37,7 @@ public class Scheduler extends Thread {
 			// Construct a datagram socket and bind it to port 23
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(portNum);
+			//receiveSocket = new DatagramSocket(portNum);
 
 		} catch (SocketException se) {
 			se.printStackTrace();
@@ -276,7 +276,11 @@ public class Scheduler extends Thread {
 	{
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
-		receiveSocket = new DatagramSocket();
+		try {
+			receiveSocket = new DatagramSocket(portNum);
+		} catch (SocketException e) {
+			throw new RuntimeException(e);
+		}
 
 		byte[] data = new byte[5000];
 		receiveFloorPacket = new DatagramPacket(data, data.length);

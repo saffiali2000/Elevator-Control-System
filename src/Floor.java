@@ -22,6 +22,7 @@ public class Floor extends Thread {
 	private CommandData commandSent; //Original command created and sent to scheduler
 	private CommandData commandConfirmed; //Command executed by elevator and returned by scheduler
 
+
 	/**
 	 * Constructor
 	 * @param commands List of commands relevant to this floor
