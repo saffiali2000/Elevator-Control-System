@@ -21,6 +21,8 @@ public class Elevator extends Thread{
 	//private ArrayList<CommandData> elevatorList;
 	//private ArrayList<CommandData> returnList;
 	
+	private ElevatorSubsystem subsystem;
+	
 	 
 	/**
 	 * Constructor
@@ -42,6 +44,7 @@ public class Elevator extends Thread{
 			se.printStackTrace();
 			System.exit(1);
 		}
+		this.subsystem = new ElevatorSubsystem();
 	}
 	
 	/**
@@ -148,6 +151,11 @@ public class Elevator extends Thread{
 		System.out.println("Elevator: Received Packet.\n");
 
 		//change state here!!
+		subsystem.handleButtonPressed();
+		//need to extract destination floor from the packet
+		//subsystem.setDestination(floor);
+		subsystem.handleDoorClosed();
+		subsystem.handleArrived();
 
 		currentCommand.setSource("elevator"); // Implement this with state changes
 		currentCommand.setDest("floor"); // Implement this with state changes
