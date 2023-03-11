@@ -24,7 +24,7 @@ public class Scheduler extends Thread {
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
 	public Scheduler(ElevatorCommands commands,int portNum) {
-		this.portNum = portNum
+		this.portNum = portNum;
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
 		this.floorList = new ArrayList<Floor>();
@@ -76,7 +76,7 @@ public class Scheduler extends Thread {
 
 		 */
 
-			System.out.println("Server received command and sorting!");
+			System.out.println("Scheduler received command and sorting!");
 			//currentCommand = commands.getCommand(0); //Selects next command to be moved
 
 			//Decide if command is valid needs to be refined
@@ -101,7 +101,6 @@ public class Scheduler extends Thread {
 
 	/**
 	 * Scheduler sends a command to either an Elevator
-	 * Shell, needs to be updated with UDP
 	 */
 	private void sendCommandElevator(Elevator elevator) {
 		/*
@@ -145,14 +144,7 @@ public class Scheduler extends Thread {
 		}
 
 		//Print out content of the message host is sending
-		System.out.println( "Host: Sending packet to server:");
-		System.out.println("To host: " + sendElevatorPacket.getAddress());
-		System.out.println("Destination host port: " + sendElevatorPacket.getPort());
-		int len = sendElevatorPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Byte Array: ");
-		System.out.print("String Form: ");
-		System.out.println(new String(sendElevatorPacket.getData(),0,len)+"\n");
+		System.out.println( "Scheduler: Sending packet to elevator:");
 
 		// Send the datagram packet to the server via the socket.
 		try {
@@ -162,13 +154,12 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Host: Packet sent to server\n");
+		System.out.println("Scheduler: Packet sent to elevator\n");
 
 		}
 
 	/**
 	 * Scheduler sends a command to a Floor
-	 * Shell, needs to be updated with UDP
 	 */
 	private void sendCommandFloor() {
 		/*
@@ -218,16 +209,10 @@ public class Scheduler extends Thread {
 		}
 
 		//Print out content of the message host is sending
-		System.out.println( "Host: Sending packet to server:");
-		System.out.println("To host: " + sendFloorPacket.getAddress());
-		System.out.println("Destination host port: " + sendFloorPacket.getPort());
-		int len = sendFloorPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Byte Array: ");
-		System.out.print("String Form: ");
+		System.out.println( "Scheduler: Sending packet to floor:");
 		System.out.println(new String(sendFloorPacket.getData(),0,len)+"\n");
 
-		// Send the datagram packet to the server via the socket.
+		// Send the datagram packet to the elevator via the socket.
 		try {
 			sendFloorSocket.send(sendFloorPacket);
 		} catch (IOException e) {
@@ -235,7 +220,7 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Host: Packet sent to server\n");
+		System.out.println("Scheduler: Packet sent to floor\n");
 
 	}
 

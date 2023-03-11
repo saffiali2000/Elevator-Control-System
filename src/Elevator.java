@@ -51,16 +51,18 @@ public class Elevator extends Thread{
 	 * @Override default run method
 	 */
 	public void run() {
-		sendAndReceive();
+		while(true) {
+			sendAndReceive();
+		}
 		//while (true) {
 		//	waitForCommand();
 		//}
 	}
 
 	
-	/**
-	 * Elevator waits for a command to be processed by the Scheduler, then executes it
-	 */
+	///**
+	// * Elevator waits for a command to be processed by the Scheduler, then executes it
+	// */
 	/*
 	private void waitForCommand() {
 		synchronized (commands) {
@@ -96,9 +98,9 @@ public class Elevator extends Thread{
 	 */
 
 
-	/**
-	 * Elevator sends response back to Scheduler to confirm its previous command was executed properly
-	 */
+	///**
+	 //* Elevator sends response back to Scheduler to confirm its previous command was executed properly
+	 //*/
 
 	/*
 	private void respondBack(){
@@ -121,7 +123,7 @@ public class Elevator extends Thread{
 
 	/**
 	 * Receive and send method
-	 * Sends and receives messages from and to client via the host, waiting every time it has to receive
+	 * Sends and receives messages from and to floor via the scheduler, waiting every time it has to receive
 	 */
 	public void sendAndReceive() {
 
@@ -183,12 +185,6 @@ public class Elevator extends Thread{
 
 		//Print out packet content
 		System.out.println("Elevator: Sending packet to scheduler:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("String Form: ");
-		System.out.println(new String(sendPacket.getData(), 0, len));
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
@@ -202,13 +198,24 @@ public class Elevator extends Thread{
 		sendSocket.close();
 	}
 
+	/**
+	 * Gets the current Command elevator is processing
+	 * @return currentCommand
+	 */
 	public CommandData getCurrentCommand(){
 		return currentCommand;
 	}
 
+	/**
+	 * Sets the current Command elevator is processing
+	 */
 	public void setCurrentCommand(CommandData currentCommand){
 		this.currentCommand = currentCommand;
 	}
 
+	/**
+	 * Gets the current port number for the socket
+	 * @return portNum
+	 */
 	public int getPortNum(){return portNum;}
 }

@@ -64,6 +64,10 @@ public class Floor extends Thread {
 		//}
 	}
 
+	/**
+	 * Read file method
+	 * Reads csv file for list of commands to send
+	 */
 	public void readFile(){
 		fileCommands = new ArrayList<>();
 		ArrayList commandsRead = new ArrayList<>();
@@ -83,6 +87,10 @@ public class Floor extends Thread {
 		}
 
 	}
+	/**
+	 * Receive and send method
+	 * Sends and receives messages from and to elevator via the scheduler, waiting every time it has to receive
+	 */
 	public void sendAndReceive() {
 		/*
 		//Create array of bytes for  read message
@@ -123,13 +131,6 @@ public class Floor extends Thread {
 
 		//Print out packet content
 		System.out.println("Floor: Sending packet to scheduler:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("String Form: ");
-		System.out.println(new String(sendPacket.getData(), 0, len));
-
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
 			sendReceiveSocket.send(sendPacket);
@@ -193,9 +194,9 @@ public class Floor extends Thread {
 	}
 
 
-		/**
-		 * Floor waits for its command to be returned to itself by Scheduler, to confirm the command was executed properly
-		 */
+		///**
+		// * Floor waits for its command to be returned to itself by Scheduler, to confirm the command was executed properly
+		// */
 	/*
 	private void waitForCommand() {
 		synchronized (commands) {
@@ -229,6 +230,10 @@ public class Floor extends Thread {
 				}
 			}
 		}
+	 */
+	/**
+	 * Gets the current port number for the socket
+	 * @return portNum
 	 */
 		public int getPortNum(){ return portNum;}
 	}
