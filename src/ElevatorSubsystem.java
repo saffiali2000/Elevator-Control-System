@@ -96,7 +96,7 @@ public class ElevatorSubsystem {
 	 * @return The time in seconds to travel between the floors
 	 */
 	public static double timeToTravel(int from, int to) {
-		return (to - from) * 3 + 4;
+		return Math.abs(to - from) * 3 + 4;
 	}
 	
 	/**
