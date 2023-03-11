@@ -109,7 +109,7 @@ public class Floor extends Thread {
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
 			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
-					InetAddress.getLocalHost(), 23);
+					InetAddress.getLocalHost(), portNum);
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -229,6 +229,7 @@ public class Floor extends Thread {
 			}
 		}
 	 */
+		public int getPortNum(){ return portNum;}
 	}
 
 

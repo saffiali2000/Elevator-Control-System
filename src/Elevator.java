@@ -37,7 +37,7 @@ public class Elevator extends Thread{
 			// Construct a datagram socket and bind it to port 69
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(69);
+			receiveSocket = new DatagramSocket(port);
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
@@ -202,4 +202,6 @@ public class Elevator extends Thread{
 	public void setCurrentCommand(CommandData currentCommand){
 		this.currentCommand = currentCommand;
 	}
+
+	public int getPortNum(){return portNum;}
 }

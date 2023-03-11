@@ -15,6 +15,7 @@ public class Scheduler extends Thread {
 	private CommandData currentCommand; //Currently-managed command
 	private CommandData recevCommand;
 	private ArrayList<Elevator> elevatorList;
+	private ArrayList<Floor> floorList;
 
 	/**
 	 * Constructor
@@ -23,6 +24,7 @@ public class Scheduler extends Thread {
 	public Scheduler(ElevatorCommands commands) {
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
+		this.floorList = new ArrayList<Floor>();
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -98,7 +100,7 @@ public class Scheduler extends Thread {
 	 * Scheduler sends a command to either an Elevator
 	 * Shell, needs to be updated with UDP
 	 */
-	private void sendCommandElevator(Elevator elevator,) {
+	private void sendCommandElevator(Elevator elevator) {
 		/*
 		synchronized (commands) {
 			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
@@ -129,7 +131,7 @@ public class Scheduler extends Thread {
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
 			sendElevatorPacket = new DatagramPacket(sendMsg, sendMsg.length,
-					InetAddress.getLocalHost(), 69);
+					InetAddress.getLocalHost(), elevator.getPortNum());
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -271,6 +273,8 @@ public class Scheduler extends Thread {
 	{
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
+		receiveSocket = new DatagramSocket();
+
 		byte[] data = new byte[5000];
 		receiveFloorPacket = new DatagramPacket(data, data.length);
 		System.out.println("Scheduler: Waiting for Packet.\n");

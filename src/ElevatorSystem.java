@@ -27,13 +27,20 @@ public class ElevatorSystem {
 		ElevatorCommands commands = new ElevatorCommands();
 		
 		//Create Floor, Elevator, and Scheduler threads
-		Thread floor1 = new Floor(commands);
+		Thread floor1 = new Floor(commands,23);
 		Scheduler scheduler = new Scheduler(commands);
-		Thread elevator1 = new Elevator(commands);
+		Thread elevator1 = new Elevator(commands,69);
+		Thread elevator2 = new Elevator(commands,70);
+		Thread elevator3 = new Elevator(commands,71);
+		Thread elevator4 = new Elevator(commands,72);
+
 		
 		//Start threads
 		floor1.start();
 		elevator1.start();
+		elevator2.start();
+		elevator3.start();
+		elevator4.start();
 		scheduler.start();
 	}
 }
