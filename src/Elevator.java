@@ -1,7 +1,5 @@
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -15,6 +13,8 @@ import java.util.*;
 public class Elevator extends Thread{
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
+
+	private int portNum;
 		
 	private ElevatorCommands commands; //Shared commands list
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
@@ -27,7 +27,8 @@ public class Elevator extends Thread{
 	 * 
 	 * @param commands ArrayList<CommandData> list of information that will be consumed
 	 */
-	public Elevator(ElevatorCommands commands) {
+	public Elevator(ElevatorCommands commands, int port) {
+		this.portNum = port;
 		this.commands = commands;
 		currentCommand = null;
 		//this.elevatorList = commands.getElevatorList();
@@ -121,65 +122,68 @@ public class Elevator extends Thread{
 	 */
 	public void sendAndReceive() {
 
-		// Construct a datagram socket and bind it to any available
-		// port on the local host machine. This socket will be used to
-		// send Datagram packets.
-		try {
-			sendSocket = new DatagramSocket();
-		} catch (SocketException se) {   // Can't create the socket.
-			se.printStackTrace();
-			System.exit(1);
-		}
-
-		// Construct a DatagramPacket for receiving server packets up
+		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
-		byte[] data = new byte[100];
+		byte[] data = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
 		System.out.println("Elevator: Waiting for Packet.\n");
 
+		// Block until a datagram packet is received from receiveSocket.
 		try {
-			// Block until a datagram is received via sendReceiveSocket.
-			System.out.println("Waiting...");
+			System.out.println("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
-		} catch(IOException e) {
+			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
+			Object o = is.readObject();
+			is.close();
+			currentCommand = (CommandData) o;
+
+		} catch (IOException | ClassNotFoundException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		// Process the received datagram.
-		System.out.println("Elevator: Packet received from scheduler:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.println("Byte Array: ");
-		System.out.print("String Form: ");
+		System.out.println("Elevator: Received Packet.\n");
 
-		// Form a String from the byte array.
-		String received = new String(data,0,len);
-		System.out.println(received+"\n");
+		//change state here!!
 
-		byte[] sendData;
-		sendData = new byte[]{0, 3, 0, 1};
+		currentCommand.setSource("elevator"); // Implement this with state changes
+		currentCommand.setDest("floor"); // Implement this with state changes
 
-		// Prepare a DatagramPacket to send back to client via host
-		sendPacket = new DatagramPacket(sendData, sendData.length,
-				receivePacket.getAddress(), receivePacket.getPort());
+		//Send packet response to scheduler
+		try {
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+			os.flush();
+			os.writeObject(currentCommand);
+			os.flush();
+
+			//retrieves byte array
+			byte[] sendMsg = byteStream.toByteArray();
+			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
+					receivePacket.getAddress(), receivePacket.getPort());
+			os.close();
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 
-		// Print out contents of packet
-		System.out.println("Server: Sending packet to host:");
+		//Print out packet content
+		System.out.println("Elevator: Sending packet to scheduler:");
 		System.out.println("To host: " + sendPacket.getAddress());
 		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len2 = sendPacket.getLength();
-		System.out.println("Length: " + len2);
+		int len = sendPacket.getLength();
+		System.out.println("Length: " + len);
 		System.out.print("String Form: ");
-		System.out.println(new String(sendPacket.getData(),0,len2));
+		System.out.println(new String(sendPacket.getData(), 0, len));
 
 		// Send the datagram packet to the server via the send/receive socket.
-
 		try {
 			sendSocket.send(sendPacket);
 		} catch (IOException e) {
@@ -187,9 +191,7 @@ public class Elevator extends Thread{
 			System.exit(1);
 		}
 
-		System.out.println("Server: Packet sent to host.\n");
-
-		//Close send socket when finished
+		System.out.println("Elevator: Packet sent to scheduler.\n");
 		sendSocket.close();
 	}
 

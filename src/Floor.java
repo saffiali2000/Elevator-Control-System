@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.time.LocalTime;
@@ -16,18 +13,21 @@ public class Floor extends Thread {
 
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
+
+	private int portNum;
 	private ElevatorCommands commands; //Shared list of commands
 	//public ArrayList<CommandData> floorList; //Log of all commands sent by this floor
 
 	private ArrayList<ArrayList> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
-	private CommandData commandConfirmed; //COmmand executed by elevator and returned by scheduler
+	private CommandData commandConfirmed; //Command executed by elevator and returned by scheduler
 
 	/**
 	 * Constructor
 	 * @param commands List of commands relevant to this floor
 	 */
-	public Floor(ElevatorCommands commands) {
+	public Floor(ElevatorCommands commands,int port) {
+		this.portNum = port;
 		this.commands = commands;
 		//this.floorList = new ArrayList<CommandData>();
 		commandSent = null;
@@ -52,11 +52,12 @@ public class Floor extends Thread {
 	 */
 	public void run() {
 		readFile();
-		int tempFloor = ((Integer) fileCommands.get(0).get(0));
-		int tempDest = ((Integer) fileCommands.get(0).get(1));
-		String tempDir = ((String) fileCommands.get(0).get(2));
-		sendAndReceive(tempFloor,tempDest,tempDir);
-		//createCommand(tempFloor, tempDest, tempDir); //Read from input file here
+		String tempTime = ((String) fileCommands.get(0).get(0));
+		int tempFloor = ((Integer) fileCommands.get(0).get(1));
+		int tempDest = ((Integer) fileCommands.get(0).get(2));
+		String tempDir = ((String) fileCommands.get(0).get(3));
+		createCommand(tempFloor, tempDest, tempTime,tempDir);//Read from input file here
+		sendAndReceive();
 		//while (true) {
 		//	waitForCommand();
 		//}
@@ -81,7 +82,8 @@ public class Floor extends Thread {
 		}
 
 	}
-	public void sendAndReceive(int startFloor, int destFloor, String dir) {
+	public void sendAndReceive() {
+		/*
 		//Create array of bytes for  read message
 		int capacity = 100;
 
@@ -90,17 +92,33 @@ public class Floor extends Thread {
 		buffer.putInt(destFloor);
 		buffer.put(dir.getBytes());
 
+
 		byte[] sendMsg = buffer.array();
+
+		 */
 
 		// Prepare a DatagramPacket and send it via sendReceiveSocket
 		// to port on the destination host.
 		try {
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+			os.flush();
+			os.writeObject(commandSent);
+			os.flush();
+
+			//retrieves byte array
+			byte[] sendMsg = byteStream.toByteArray();
 			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
 					InetAddress.getLocalHost(), 23);
+			os.close();
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
+
 
 		//Print out packet content
 		System.out.println("Floor: Sending packet to scheduler:");
@@ -108,7 +126,6 @@ public class Floor extends Thread {
 		System.out.println("Destination host port: " + sendPacket.getPort());
 		int len = sendPacket.getLength();
 		System.out.println("Length: " + len);
-		System.out.print("Byte Array: ");
 		System.out.print("String Form: ");
 		System.out.println(new String(sendPacket.getData(), 0, len));
 
@@ -122,35 +139,29 @@ public class Floor extends Thread {
 
 		System.out.println("Floor: Packet sent to scheduler.\n");
 
-		// Construct a DatagramPacket for receiving packets up
-		// to 100 bytes long (the length of the byte array).
-		byte[] data = new byte[100];
+		byte[] data = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("Client: Waiting for Packet.\n");
+		System.out.println("Floor: Waiting for Packet.\n");
 
+		// Block until a datagram packet is received from receiveSocket.
 		try {
-			// Block until a datagram is received via sendReceiveSocket.
-			System.out.println("Waiting...");
+			System.out.println("Waiting..."); // so we know we're waiting
 			sendReceiveSocket.receive(receivePacket);
-		} catch (IOException e) {
+			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
+			Object o = is.readObject();
+			is.close();
+			commandConfirmed = (CommandData) o;
+
+		} catch (IOException | ClassNotFoundException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		// Process the received datagram.
-		System.out.println("Floor: Packet received from scheduler:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Byte Array: ");
-		// Form a String from the byte array.
-		System.out.println("String Form:");
-		String received = new String(data, 0, len);
-		System.out.println(received + "\n");
-
+		System.out.println("Floor: Received Packet.\n");
+	}
 
 		/**
 		 * Creates a floor-source command and sends it to Scheduler
@@ -158,8 +169,9 @@ public class Floor extends Thread {
 		 * @param destFloor Destination floor of elevator
 		 * @param dir Up or down
 		 */
-	/*
-	public void createCommand(int startFloor, int destFloor, String dir) {
+
+	public void createCommand(int startFloor, int destFloor, String time, String dir) {
+		/*
 		synchronized (commands) {
 			while (commands.getSize() > 0) { //Wait until commands list is empty
 				try {
@@ -169,18 +181,16 @@ public class Floor extends Thread {
 					return;
 				}
 			}
-			
-			//Create a new command and send it to the Scheduler
-			LocalTime time = LocalTime.now();
-			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "scheduler");
+
+
+		 */
+			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "elevator");
 			commandSent = command;
-			commands.addCommand(command);
-			System.out.println("Floor created command and sent to server!");
-			commands.notifyAll();
-		}
+			//commands.addCommand(command);
+			//System.out.println("Floor created command and sent to server!");
+			//commands.notifyAll();
 	}
 
-	 */
 
 		/**
 		 * Floor waits for its command to be returned to itself by Scheduler, to confirm the command was executed properly
@@ -220,4 +230,5 @@ public class Floor extends Thread {
 		}
 	 */
 	}
-}
+
+
