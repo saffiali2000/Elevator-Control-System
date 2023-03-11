@@ -17,11 +17,14 @@ public class Scheduler extends Thread {
 	private ArrayList<Elevator> elevatorList;
 	private ArrayList<Floor> floorList;
 
+	private int portNum;
+
 	/**
 	 * Constructor
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
-	public Scheduler(ElevatorCommands commands) {
+	public Scheduler(ElevatorCommands commands,int portNum) {
+		this.portNum = portNum
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
 		this.floorList = new ArrayList<Floor>();
@@ -34,7 +37,7 @@ public class Scheduler extends Thread {
 			// Construct a datagram socket and bind it to port 23
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(23);
+			receiveSocket = new DatagramSocket(portNum);
 
 		} catch (SocketException se) {
 			se.printStackTrace();

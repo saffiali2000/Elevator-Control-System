@@ -28,7 +28,7 @@ public class ElevatorSystem {
 		
 		//Create Floor, Elevator, and Scheduler threads
 		Thread floor1 = new Floor(commands,23);
-		Scheduler scheduler = new Scheduler(commands);
+		Scheduler scheduler = new Scheduler(commands,23);
 		Thread elevator1 = new Elevator(commands,69);
 		Thread elevator2 = new Elevator(commands,70);
 		Thread elevator3 = new Elevator(commands,71);
