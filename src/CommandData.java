@@ -1,4 +1,3 @@
-import java.io.Serializable;
 import java.time.LocalTime;
 
 /**
@@ -6,8 +5,8 @@ import java.time.LocalTime;
  * @author Ashwin Stoparczyk
  *
  */
-public class CommandData implements Serializable {
-	private String time;
+public class CommandData {
+	private LocalTime time;
 	private int startFloor;
 	private int destFloor;
 	private String dir;
@@ -24,7 +23,7 @@ public class CommandData implements Serializable {
 	 * @param source Source of the command ("floor", "scheduler", or "elevator")
 	 * @param dest Destination of the command ("floor", "scheduler", or "elevator")
 	 */
-	public CommandData(String time, int startFloor, int destFloor, String dir, String source, String dest){
+	public CommandData(LocalTime time, int startFloor, int destFloor, String dir, String source, String dest){
 		this.setTime(time);
 		this.setStartFloor(startFloor);
 		this.setDestFloor(destFloor);
@@ -37,11 +36,11 @@ public class CommandData implements Serializable {
 	/**
 	 * Getters and setters for CommandData fields
 	 */
-	public String getTime() {
+	public LocalTime getTime() {
 		return time;
 	}
 
-	public void setTime(String time) {
+	public void setTime(LocalTime time) {
 		this.time = time;
 	}
 
