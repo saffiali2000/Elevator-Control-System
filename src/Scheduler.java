@@ -8,7 +8,7 @@ import java.util.ArrayList;
  *
  */
 public class Scheduler extends Thread {
-
+	public enum SchedulerState {Idle, Sorting};
 	DatagramPacket sendElevatorPacket, receiveFloorPacket, sendFloorPacket,receiveElevator;
 	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorSocket;
 	private ElevatorCommands commands; //Shared command list
@@ -24,6 +24,7 @@ public class Scheduler extends Thread {
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
 	public Scheduler(ElevatorCommands commands,int portNum) {
+		SchedulerState = SchedulerState.Idle;
 		this.portNum = portNum;
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
@@ -37,7 +38,7 @@ public class Scheduler extends Thread {
 			// Construct a datagram socket and bind it to port 23
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			//receiveSocket = new DatagramSocket(portNum);
+			//receiveSocket = new DatagramSocket(23);
 
 		} catch (SocketException se) {
 			se.printStackTrace();
@@ -75,32 +76,39 @@ public class Scheduler extends Thread {
 			}
 
 		 */
+			//Update state
+			SchedulerState = SchedulerState.Sorting;
 
-			System.out.println("Scheduler received command and sorting!");
+			System.out.println("Server received command and sorting!");
 			//currentCommand = commands.getCommand(0); //Selects next command to be moved
 
 			//Decide if command is valid needs to be refined
-			if (currentCommand.getDir() != "up" || currentCommand.getDir() != "down" || currentCommand.getDest() != "floor" || currentCommand.getDest() != "server" || currentCommand.getDest() != "elevator" ||
-					currentCommand.getSource() != "floor" || currentCommand.getSource() != "server" || currentCommand.getSource() != "elevator") {
+			if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
+				currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
+				currentCommand.getStartFloor > elevatorList.getSize() || currentCommand.getDestFloor > elevatorList.getSize()) {
 				System.out.println("Command invalid. Removing");
 				currentCommand = null;
 			}
 
-			//Sort list here
-
+			//Determine best elevator to send command to
 			Elevator closestElevator = determineClosestElevator();
 
+			//Send command
 			if (currentCommand.getDest().equals("elevator") ){
 				sendCommandElevator(closestElevator);
 			} else {
 				sendCommandFloor();
 			}
+
+			//Update state
+			SchedulerState = SchedulerState.Idle;
 			//commands.notifyAll();
 		//}
 	}
 
 	/**
 	 * Scheduler sends a command to either an Elevator
+	 * @param elevator The elevator the command is sent to
 	 */
 	private void sendCommandElevator(Elevator elevator) {
 		/*
@@ -144,7 +152,14 @@ public class Scheduler extends Thread {
 		}
 
 		//Print out content of the message host is sending
-		System.out.println( "Scheduler: Sending packet to elevator:");
+		System.out.println( "Host: Sending packet to server:");
+		System.out.println("To host: " + sendElevatorPacket.getAddress());
+		System.out.println("Destination host port: " + sendElevatorPacket.getPort());
+		int len = sendElevatorPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.print("Byte Array: ");
+		System.out.print("String Form: ");
+		System.out.println(new String(sendElevatorPacket.getData(),0,len)+"\n");
 
 		// Send the datagram packet to the server via the socket.
 		try {
@@ -154,7 +169,7 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Scheduler: Packet sent to elevator\n");
+		System.out.println("Host: Packet sent to server\n");
 
 		}
 
@@ -209,10 +224,16 @@ public class Scheduler extends Thread {
 		}
 
 		//Print out content of the message host is sending
-		System.out.println( "Scheduler: Sending packet to floor:");
+		System.out.println( "Host: Sending packet to server:");
+		System.out.println("To host: " + sendFloorPacket.getAddress());
+		System.out.println("Destination host port: " + sendFloorPacket.getPort());
+		int len = sendFloorPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.print("Byte Array: ");
+		System.out.print("String Form: ");
 		System.out.println(new String(sendFloorPacket.getData(),0,len)+"\n");
 
-		// Send the datagram packet to the elevator via the socket.
+		// Send the datagram packet to the server via the socket.
 		try {
 			sendFloorSocket.send(sendFloorPacket);
 		} catch (IOException e) {
@@ -220,7 +241,7 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Scheduler: Packet sent to floor\n");
+		System.out.println("Host: Packet sent to server\n");
 
 	}
 
@@ -229,6 +250,8 @@ public class Scheduler extends Thread {
 	 * Algorithm:
 	 * Scheduler first searches for any elevators that are moving towards the destination floor. If at least one exists, only they are considered. Otherwise, all are considered
 	 * Scheduler then determines the elevator that will take the shortest amount of time to reach the destination floor i.e smallest gap in floor difference
+	 *
+	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
 	private Elevator determineClosestElevator(){
 		ArrayList<Elevator> consideredElevators;
@@ -250,6 +273,7 @@ public class Scheduler extends Thread {
 			if (Math.abs(el.getDestFloor() - closestElevator.getDestFloor()) < closest) closestElevator = el;
 		}
 
+		System.out.println("Closest elevator is: " + elevatorList.indexOf(closestElevator));
 		return closestElevator;
 	}
 
@@ -257,16 +281,10 @@ public class Scheduler extends Thread {
 	 * Receive and send method
 	 * Sends and receives messages from and to client/server, waiting every time it has to receive
 	 */
-	public void receiveFloor()
+	private void receiveFloor()
 	{
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
-		try {
-			receiveSocket = new DatagramSocket(portNum);
-		} catch (SocketException e) {
-			throw new RuntimeException(e);
-		}
-
 		byte[] data = new byte[5000];
 		receiveFloorPacket = new DatagramPacket(data, data.length);
 		System.out.println("Scheduler: Waiting for Packet.\n");
@@ -291,7 +309,11 @@ public class Scheduler extends Thread {
 
 	}
 
-	public void receiveElevator()
+	/**
+	 * Receive and send method
+	 * Sends and receives messages from and to client/server, waiting every time it has to receive
+	 */
+	private void receiveElevator()
 	{
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
