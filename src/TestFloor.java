@@ -47,6 +47,10 @@ class TestFloor {
         floor = new Floor(commands,0);
         floor.start();
         scheduler.start();
+        CommandData command = new CommandData(1, 3, "09:30:00", "up");
+        floor.setCommandSent(command);
+        floor.sendAndReceive();
+        assertEquals(command, floor.getCommandConfirmed());
     }
 
 }
