@@ -16,6 +16,8 @@ public class Scheduler extends Thread {
 	private CommandData recevCommand;
 	private ArrayList<Elevator> elevatorList;
 	private ArrayList<Floor> floorList;
+	
+	private SchedulerState schedulerState;
 
 	private int portNum;
 
@@ -24,7 +26,7 @@ public class Scheduler extends Thread {
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
 	public Scheduler(ElevatorCommands commands,int portNum) {
-		SchedulerState = SchedulerState.Idle;
+		schedulerState = SchedulerState.Idle;
 		this.portNum = portNum;
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
@@ -77,7 +79,7 @@ public class Scheduler extends Thread {
 
 		 */
 			//Update state
-			SchedulerState = SchedulerState.Sorting;
+			schedulerState = SchedulerState.Sorting;
 
 			System.out.println("Server received command and sorting!");
 			//currentCommand = commands.getCommand(0); //Selects next command to be moved
@@ -101,7 +103,7 @@ public class Scheduler extends Thread {
 			}
 
 			//Update state
-			SchedulerState = SchedulerState.Idle;
+			schedulerState = SchedulerState.Idle;
 			//commands.notifyAll();
 		//}
 	}
@@ -254,7 +256,7 @@ public class Scheduler extends Thread {
 	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
 	private Elevator determineClosestElevator(){
-		ArrayList<Elevator> consideredElevators;
+		ArrayList<Elevator> consideredElevators = null;
 		for (Elevator el : elevatorList){
 			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
 			if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||

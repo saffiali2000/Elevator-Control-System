@@ -22,16 +22,19 @@ public class ElevatorCommands {
 	 */
 	public void addCommand(CommandData command) {commands.add(command);}
 
+
 	/**
 	 * Getters for a specific command
 	 * @param index Index of the command to be retrieved
 	 * @return The command at the specified index
 	 */
+	/*
 	public CommandData getCommand(int index) {
 		CommandData temp = floorCommands.get(index);
 		floorCommands.remove(index);
 		return temp;
 	}
+	 */
 
 	/**
 	 * Getters for size of commands list

@@ -1,5 +1,8 @@
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 
 /**
  * JUnit tests for the Scheduler class.
@@ -30,14 +33,14 @@ class TestScheduler {
         //Create Floor, Elevator, and Scheduler threads
         Thread floor1 = new Floor(commands, 40);
         Thread floor2 = new Floor(commands, 41);
-        Thread scheduler = new Scheduler(commands);
+        Thread scheduler = new Scheduler(commands,40);
         Thread elevator1 = new Elevator(commands, 50);
         Thread elevator2 = new Elevator(commands, 51);
 
         //Start all treads
         floor1.start();
         floor2.start();
-        scheduler1.start();
+        scheduler.start();
         elevator1.start();
         elevator2.start();
     }
