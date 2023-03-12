@@ -32,8 +32,16 @@ public class ElevatorSubsystem {
 	 */
 	public void handleButtonPressed() {
 		if (currentState == ElevatorState.Idle) {
-			currentState = ElevatorState.Open;
-			openDoors();
+			if (dest > curr) {
+				currentState = ElevatorState.MovingUp;
+				move();
+			} else if (dest < curr) {
+				currentState = ElevatorState.MovingDown;
+				move();
+			} else if (curr == dest) {
+				currentState = ElevatorState.Open;
+				openDoors();
+			}
 		}
 	}
 	

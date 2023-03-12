@@ -28,6 +28,15 @@ class TestElevatorSubsystem {
 	void testHandleButtonPressed() {
 		subsystem.handleButtonPressed();
 		assertEquals(ElevatorSubsystem.ElevatorState.Open, subsystem.getState());
+		subsystem.handleDoorClosed();
+		subsystem.setDestination(2);
+		subsystem.handleButtonPressed();
+		assertEquals(ElevatorSubsystem.ElevatorState.MovingUp, subsystem.getState());
+		subsystem.handleArrived();
+		subsystem.setDestination(1);
+		subsystem.handleDoorClosed();
+		subsystem.handleButtonPressed();
+		assertEquals(ElevatorSubsystem.ElevatorState.MovingDown, subsystem.getState());
 	}
 
 	@Test
