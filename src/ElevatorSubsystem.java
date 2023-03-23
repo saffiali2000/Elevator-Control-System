@@ -89,8 +89,14 @@ public class ElevatorSubsystem {
 	 * Move the elevator to the destination floor.
 	 */
 	private void move() {
+		int start = curr;
 		try {
-			Thread.sleep((long) (timeToTravel(curr, dest) * 1000));
+			for (int i = start; i < dest; i++) {
+				double seconds = timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + 1, dest);
+				Thread.sleep((long) (seconds * 1000));
+				curr = i;
+				// Send update message to scheduler
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -104,7 +110,11 @@ public class ElevatorSubsystem {
 	 * @return The time in seconds to travel between the floors
 	 */
 	public static double timeToTravel(int from, int to) {
-		return Math.abs(to - from) * 3 + 4;
+		if (from == to) {
+			return 0;
+		} else {
+			return Math.abs(to - from) * 3 + 4;
+		}
 	}
 	
 	/**
