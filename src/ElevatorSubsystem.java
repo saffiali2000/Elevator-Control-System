@@ -90,9 +90,15 @@ public class ElevatorSubsystem {
 	 */
 	private void move() {
 		int start = curr;
+		int inc;
+		if (currentState.equals(ElevatorState.MovingUp)) {
+			inc = 1;
+		} else {
+			inc = -1;
+		}
 		try {
-			for (int i = start; i < dest; i++) {
-				double seconds = timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + 1, dest);
+			for (int i = start; i != dest; i += inc) {
+				double seconds = timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + inc, dest);
 				Thread.sleep((long) (seconds * 1000));
 				curr = i;
 				// Send update message to scheduler
