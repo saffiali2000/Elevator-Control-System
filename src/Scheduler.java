@@ -19,18 +19,21 @@ public class Scheduler extends Thread {
 	
 	private SchedulerState schedulerState;
 
+	private int elevNum;
+
 	private int portNum;
 
 	/**
 	 * Constructor
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
-	public Scheduler(ElevatorCommands commands,int portNum) {
+	public Scheduler(ElevatorCommands commands,int portNum,int elevNum) {
 		schedulerState = SchedulerState.Idle;
 		this.portNum = portNum;
 		this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
 		this.floorList = new ArrayList<Floor>();
+		this.elevNum = elevNum;
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -55,7 +58,9 @@ public class Scheduler extends Thread {
 	 * @Override default run method
 	 */
 	public void run() {
-		recevElevInfo();
+		for (int i = 0;i < elevNum; i++) {
+			recevElevInfo();
+		}
 		while (true) {
 			receiveFloor();
 			sortCommands();
@@ -351,6 +356,7 @@ public class Scheduler extends Thread {
 		byte[] data = new byte[5000];
 		receiveElevator = new DatagramPacket(data, data.length);
 		System.out.println("Scheduler: Waiting for Packet.\n");
+		int index = 0;
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -360,7 +366,13 @@ public class Scheduler extends Thread {
 			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
 			Object o = is.readObject();
 			is.close();
-			recevCommand = (CommandData) o;
+			Elevator tempElevator = (Elevator) o;
+			for (Elevator elevator : elevatorList){
+				if (elevator.getPortNum() == tempElevator.getPortNum()){
+					index = elevatorList.indexOf(elevator);
+				}
+			}
+			elevatorList.set(index,tempElevator);
 
 		} catch (IOException | ClassNotFoundException e) {
 			System.out.print("IO Exception: likely:");

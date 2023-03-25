@@ -82,6 +82,7 @@ public class ElevatorSubsystem {
 		if (currentState == ElevatorState.MovingUp || currentState == ElevatorState.MovingDown) {
 			currentState = ElevatorState.Open;
 			openDoors();
+
 		}
 	}
 

@@ -218,15 +218,12 @@ public class Elevator extends Thread{
 		subsystem.handleDoorClosed();
 		subsystem.handleArrived();
 
-		currentCommand.setSource("elevator"); // Implement this with state changes
-		currentCommand.setDest("floor"); // Implement this with state changes
-
-		//Send packet response to scheduler
+		//Send updated location to scheduler
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
 			os.flush();
-			os.writeObject(currentCommand);
+			os.writeObject(this);
 			os.flush();
 
 			//retrieves byte array
