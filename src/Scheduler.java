@@ -176,25 +176,6 @@ public class Scheduler extends Thread {
 	 * Scheduler sends a command to a Floor
 	 */
 	private void sendCommandFloor() {
-		/*
-		synchronized (commands) {
-			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-			//Change command source to scheduler to mark that it has been processed and add it back to commands list
-			//Command is already checked for validity in sortCommands()
-			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", currentCommand.getDest());
-			System.out.println("Server sent command to elevator!");
-			commands.notifyAll();
-		}
-
-		 */
 
 		try {
 			sendFloorSocket = new DatagramSocket();
@@ -306,6 +287,30 @@ public class Scheduler extends Thread {
 		}
 		System.out.println("Scheduler: Received Packet.\n");
 
+		try {
+			sendFloorSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+
+		String reply = "Received!";
+		byte[] sendMsg = reply.getBytes();
+		sendFloorPacket = new DatagramPacket(sendMsg, sendMsg.length,
+				receiveFloorPacket.getAddress(), receiveFloorPacket.getPort());
+
+		//Print out content of the message host is sending
+		System.out.println( "Scheduler: Sending packet to floor:");
+
+		// Send the datagram packet to the server via the socket.
+		try {
+			sendFloorSocket.send(sendFloorPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Scheduler: Packet sent to floor\n");
 	}
 
 	/**
@@ -344,6 +349,23 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 		System.out.println("Scheduler: Received Packet.\n");
+
+		String reply = "Received!";
+		byte[] sendMsg = reply.getBytes();
+		sendElevatorPacket = new DatagramPacket(sendMsg, sendMsg.length,
+				receiveElevator.getAddress(), receiveElevator.getPort());
+
+		//Print out content of the message host is sending
+		System.out.println( "Scheduler: Sending packet to Elevator:");
+
+		// Send the datagram packet to the server via the socket.
+		try {
+			sendReceiveSocket.send(sendElevatorPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("Scheduler: Packet sent to Elevator\n");
 
 	}
 	public static void main(String[] args) {

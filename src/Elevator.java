@@ -13,14 +13,8 @@ import java.util.*;
 public class Elevator extends Thread{
 	DatagramPacket sendPacket, receivePacket,sendInfo;
 	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
-
 	private int portNum;
-
-	private ElevatorCommands commands; //Shared commands list
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
-	//private ArrayList<CommandData> elevatorList;
-	//private ArrayList<CommandData> returnList;
-
 	private ElevatorSubsystem subsystem;
 
 	private ArrayList<String> errors;
