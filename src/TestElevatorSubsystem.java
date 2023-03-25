@@ -29,8 +29,12 @@ class TestElevatorSubsystem {
 		subsystem.handleButtonPressed();
 		assertEquals(ElevatorSubsystem.ElevatorState.Open, subsystem.getState());
 		subsystem.handleDoorClosed();
+		assertEquals(ElevatorSubsystem.ElevatorState.Idle, subsystem.getState());
 		subsystem.setDestination(2);
 		subsystem.handleButtonPressed();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) { e.printStackTrace(); }
 		assertEquals(ElevatorSubsystem.ElevatorState.MovingUp, subsystem.getState());
 		subsystem.handleArrived();
 		subsystem.setDestination(1);
@@ -50,6 +54,11 @@ class TestElevatorSubsystem {
 		subsystem.setDestination(2);
 		subsystem.handleDoorClosed();
 		assertEquals(ElevatorSubsystem.ElevatorState.MovingUp, subsystem.getState());
+		try {
+			Thread.sleep((long) (ElevatorSubsystem.timeToTravel(1, 2) * 1000 + 1000));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		assertEquals(2, subsystem.getCurrentFloor());
 		subsystem.handleArrived();
 		assertEquals(ElevatorSubsystem.ElevatorState.Open, subsystem.getState());

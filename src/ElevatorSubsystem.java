@@ -16,6 +16,8 @@ public class ElevatorSubsystem {
 	private int curr;
 	/** The elevator's current destination floor. */
 	private int dest;
+	/** The elevator's motor thread. */
+	private MotorThread motor;
 
 	/**
 	 * Create a new ElevatorSubsystem in the Idle state with doors closed.
@@ -25,6 +27,8 @@ public class ElevatorSubsystem {
 		doorOpen = false;
 		curr = 1;
 		dest = 1;
+		motor = new MotorThread();
+		motor.start();
 	}
 	
 	/**
@@ -34,10 +38,10 @@ public class ElevatorSubsystem {
 		if (currentState == ElevatorState.Idle) {
 			if (dest > curr) {
 				currentState = ElevatorState.MovingUp;
-				move();
+				motor.signalMove();
 			} else if (dest < curr) {
 				currentState = ElevatorState.MovingDown;
-				move();
+				motor.signalMove();
 			} else if (curr == dest) {
 				currentState = ElevatorState.Open;
 				openDoors();
@@ -65,10 +69,10 @@ public class ElevatorSubsystem {
 			doorOpen = false;
 			if (dest > curr) {
 				currentState = ElevatorState.MovingUp;
-				move();
+				motor.signalMove();
 			} else if (dest < curr) {
 				currentState = ElevatorState.MovingDown;
-				move();
+				motor.signalMove();
 			} else if (dest == curr) {
 				currentState = ElevatorState.Idle;
 			}
@@ -81,7 +85,7 @@ public class ElevatorSubsystem {
 	public void handleArrived() {
 		if (currentState == ElevatorState.MovingUp || currentState == ElevatorState.MovingDown) {
 			currentState = ElevatorState.Open;
-			openDoors();
+			motor.signalOpenDoors();
 		}
 	}
 	
@@ -153,5 +157,54 @@ public class ElevatorSubsystem {
 	 */
 	public int getCurrentFloor() {
 		return curr;
+	}
+	
+	private class MotorThread extends Thread {
+		/** Signal for motor to move */
+		private boolean motorSignal;
+		/** Signal to open doors */
+		private boolean openDoorSignal;
+		
+		public MotorThread() {
+			motorSignal = false;
+			openDoorSignal = false;
+		}
+		
+		@Override
+		public void run() {
+			synchronized (this) {
+				while (!motorSignal && !openDoorSignal) {
+					try {
+						wait();
+					} catch (InterruptedException e) {}
+					
+					if (openDoorSignal) {
+						ElevatorSubsystem.this.openDoors();
+						try {
+							Thread.sleep(3000);
+						} catch (InterruptedException e) {}
+						handleDoorClosed();
+					}
+					
+					if (motorSignal) {
+						ElevatorSubsystem.this.move();
+						handleArrived();
+					}
+					
+					motorSignal = false;
+					openDoorSignal = false;
+				}
+			}
+		}
+		
+		public synchronized void signalMove() {
+			motorSignal = true;
+			notifyAll();
+		}
+		
+		public synchronized void signalOpenDoors() {
+			openDoorSignal = true;
+			notifyAll();
+		}
 	}
 }
