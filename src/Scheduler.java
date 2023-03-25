@@ -42,11 +42,6 @@ public class Scheduler extends Thread {
 
 			receiveElev = new DatagramSocket(55);
 
-			// Construct a datagram socket and bind it to port 23
-			// on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
-			//receiveSocket = new DatagramSocket(23);
-
 		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
@@ -100,18 +95,6 @@ public class Scheduler extends Thread {
 	 * No sorting algorithm yet
 	 */
 	private void sortCommands() {
-		/*
-		synchronized (commands) {
-			while (commands.getSize() < 1) { //Wait until commands list is populated
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-		 */
 			//Update state
 			schedulerState = SchedulerState.Sorting;
 
@@ -147,26 +130,6 @@ public class Scheduler extends Thread {
 	 * @param elevator The elevator the command is sent to
 	 */
 	private void sendCommandElevator(Elevator elevator) {
-		/*
-		synchronized (commands) {
-			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-			//Change command source to scheduler to mark that it has been processed and add it back to commands list
-			//Command is already checked for validity in sortCommands()
-			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "scheduler", currentCommand.getDest());
-			System.out.println("Server sent command to elevator!");
-			commands.notifyAll();
-			}
-
-		 */
-
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));

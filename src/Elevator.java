@@ -33,10 +33,7 @@ public class Elevator extends Thread{
 	 */
 	public Elevator(int port) {
 		this.portNum = port;
-		//this.commands = commands;
 		currentCommand = null;
-		//this.elevatorList = commands.getElevatorList();
-		//this.returnList = commands.getReturnElevatorList();
 		try {
 			// Construct a datagram socket and bind it to port 69
 			// on the local host machine. This socket will be used to
@@ -57,15 +54,9 @@ public class Elevator extends Thread{
 		readFile();
 		while(true) {
 			sendAndReceive();
+			sendAck();
 		}
-		//while (true) {
-		//	waitForCommand();
-		//}
 	}
-
-
-
-
 
 	/* if(error == "doorstuck")
 	 * {
@@ -81,71 +72,6 @@ public class Elevator extends Thread{
 	 * 		//remove elevator
 	 * 		// transfer floors to another elevator;
 	 *}
-	 */
-
-
-
-
-
-	///**
-	// * Elevator waits for a command to be processed by the Scheduler, then executes it
-	// */
-	/*
-	private void waitForCommand() {
-		synchronized (commands) {
-			while (commands.getSize() < 1) { //Wait until commands list is populated
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-			boolean validCommand = false; //Valid command recieved
-
-			//Iterate through commands to check for a command going from scheduler to this elevator, which must be an actionable command
-			for (CommandData cd : commands){
-				if (cd.getSource().equals("scheduler") && cd.getDest().equals("elevator")){
-					currentCommand = cd;
-					validCommand = true;
-				}
-			}
-
-			//If a valid command was recieved execute it and respond back
-			if (validCommand) {
-				System.out.println("Elevator received command responding back!");
-				//Execute command here
-				respondBack();
-			} else { System.out.println("No elevator-bound command exists, continue waiting");}
-			commands.notifyAll();
-		}
-	}
-
-	 */
-
-
-	///**
-	//* Elevator sends response back to Scheduler to confirm its previous command was executed properly
-	//*/
-
-	/*
-	private void respondBack(){
-		synchronized (commands) {
-			while (commands.getSize() > 10) { //Wait until commands list is not overflowing (temporary)
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-			//Send executed command back to Scheduler
-			commands.addCommand(currentCommand.getTime(), currentCommand.getStartFloor(), currentCommand.getDestFloor(), currentCommand.getDir(), "elevator", "scheduler");
-			System.out.println("Elevator sent command back!");
-		}
-	}
-
 	 */
 
 	public void notifyExists() {
@@ -171,7 +97,7 @@ public class Elevator extends Thread{
 
 
 		//Print out packet content
-		System.out.println("Elevator: Sending packet to scheduler:");
+		System.out.println("Elevator: Sending elevator info to scheduler:");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
@@ -191,11 +117,10 @@ public class Elevator extends Thread{
 	public void sendAndReceive() {
 		try {
 			InetAddress serverAddress = InetAddress.getLocalHost();
-			int serverPort = 23;
-			
+
 			byte[] reqMsg = "requesting command".getBytes();
 			sendPacket = new DatagramPacket(reqMsg, reqMsg.length,
-					serverAddress, serverPort);
+					serverAddress, portNum);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -213,8 +138,8 @@ public class Elevator extends Thread{
 		}
 
 		System.out.println("Elevator: Packet sent to scheduler.\n");
-		
-		
+
+
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
 		byte[] data = new byte[5000];
@@ -243,6 +168,12 @@ public class Elevator extends Thread{
 		//change state here!!
 		subsystem.setDestination(currentCommand.getDestFloor());
 		subsystem.handleButtonPressed();
+	}
+	/**
+	 * Send Acknowledgement/Updated state
+	 * Sends and receives messages from and to floor via the scheduler, waiting every time it has to receive
+	 */
+	public void sendAck() {
 
 		//Send updated location to scheduler
 		try {
@@ -278,7 +209,23 @@ public class Elevator extends Thread{
 		}
 
 		System.out.println("Elevator: Packet sent to scheduler.\n");
-		sendSocket.close();
+
+		byte[] data = new byte[5000];
+		receivePacket = new DatagramPacket(data, data.length);
+		System.out.println("Elevator: Waiting for Confirmation Reply .\n");
+
+		// Block until a datagram packet is received from receiveSocket.
+		try {
+			System.out.println("Waiting..."); // so we know we're waiting
+			receiveSocket.receive(receivePacket);
+		} catch (IOException e) {
+			System.out.print("IO Exception: likely:");
+			System.out.println("Receive Socket Timed Out.\n" + e);
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Elevator: Received Confirmation Reply.\n");
 	}
 
 	/**

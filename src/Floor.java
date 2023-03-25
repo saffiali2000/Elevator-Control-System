@@ -98,22 +98,6 @@ public class Floor extends Thread {
 	 * Sends and receives messages from and to elevator via the scheduler, waiting every time it has to receive
 	 */
 	public void sendAndReceive() {
-		/*
-		//Create array of bytes for  read message
-		int capacity = 100;
-
-		ByteBuffer buffer = ByteBuffer.allocate(capacity);
-		buffer.putInt(startFloor);
-		buffer.putInt(destFloor);
-		buffer.put(dir.getBytes());
-
-
-		byte[] sendMsg = buffer.array();
-
-		 */
-
-		// Prepare a DatagramPacket and send it via sendReceiveSocket
-		// to port on the destination host.
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
@@ -179,67 +163,12 @@ public class Floor extends Thread {
 		 */
 
 	public void createCommand(int startFloor, int destFloor, String time, String dir) {
-		/*
-		synchronized (commands) {
-			while (commands.getSize() > 0) { //Wait until commands list is empty
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-
-		 */
 			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "elevator");
 			synchronized (this) {
 				commandSent = command;
 				notifyAll();
 			}
-			//commands.addCommand(command);
-			//System.out.println("Floor created command and sent to server!");
-			//commands.notifyAll();
 	}
-
-
-		///**
-		// * Floor waits for its command to be returned to itself by Scheduler, to confirm the command was executed properly
-		// */
-	/*
-	private void waitForCommand() {
-		synchronized (commands) {
-			while (commands.getElevatorSize() == 0) { //Wait until commands list is populated
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					return;
-				}
-
-				boolean validCommand = false; //Returning command recieved
-
-				//Iterate through commands to check for a command going from scheduler to this floor, which must be a returning command
-				for (CommandData cd : commands){
-					if (cd.getSource().equals("scheduler") && cd.getDest().equals("floor")){
-						commandConfirmed = commands.getFloorReturn(0);
-						validCommand = true;
-					}
-				}
-
-				//If floor found a returning command compare it to the one it sent previously
-				if (validCommand) {
-					//Check if the returned command is the same as the original command
-					if (commandSent == commandConfirmed) {
-						System.out.println("Floor received command back!");
-						//floorList.add(commandSent);
-					} else {System.out.println("Floor received incorrect command back.");}
-
-					commands.notifyAll();
-					System.exit(0);
-				}
-			}
-		}
-	 */
 	/**
 	 * Gets the current port number for the socket
 	 * @return portNum
