@@ -11,17 +11,13 @@ import java.util.ArrayList;
  */
 public class Floor extends Thread {
 
-	DatagramPacket sendPacket, receivePacket;
+	DatagramPacket sendCommandPkt, receiveReplyPkt, requestUpdatePkt, recevUpdatePkt;
 	DatagramSocket sendReceiveSocket;
-
+	DatagramSocket sendRecevAck;
 	private int portNum;
 	private ElevatorCommands commands; //Shared list of commands
-	//public ArrayList<CommandData> floorList; //Log of all commands sent by this floor
-
 	private ArrayList<ArrayList> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
-	private CommandData commandConfirmed; //Command executed by elevator and returned by scheduler
-	
 	private SendReceiveThread sendThread;
 
 
@@ -31,15 +27,13 @@ public class Floor extends Thread {
 	 */
 	public Floor(int port) {
 		this.portNum = port;
-		this.commands = commands;
-		//this.floorList = new ArrayList<CommandData>();
 		commandSent = null;
-
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
 			// send and receive UDP Datagram packets.
 			sendReceiveSocket = new DatagramSocket();
+			sendRecevAck = new DatagramSocket();
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
@@ -67,6 +61,9 @@ public class Floor extends Thread {
 			 * Thread.sleep() until the correct time before sending 
 			 */
 			createCommand(tempFloor, tempDest, tempTime,tempDir);
+		}
+		while(true){
+			sendAndReceiveAck();
 		}
 	}
 
@@ -107,7 +104,7 @@ public class Floor extends Thread {
 
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
-			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
+			sendCommandPkt = new DatagramPacket(sendMsg, sendMsg.length,
 					InetAddress.getLocalHost(), portNum);
 			os.close();
 
@@ -120,39 +117,71 @@ public class Floor extends Thread {
 
 
 		//Print out packet content
-		System.out.println("Floor: Sending packet to scheduler:");
+		System.out.println("Floor: Sending command to scheduler:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendReceiveSocket.send(sendPacket);
+			sendReceiveSocket.send(sendCommandPkt);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Packet sent to scheduler.\n");
+		System.out.println("Floor: Command sent to scheduler.\n");
 
 		byte[] data = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("Floor: Waiting for Packet.\n");
+		receiveReplyPkt = new DatagramPacket(data, data.length);
+		System.out.println("Floor: Waiting for Confirmation.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			sendReceiveSocket.receive(receivePacket);
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
-			commandConfirmed = (CommandData) o;
-
-		} catch (IOException | ClassNotFoundException e) {
+			sendReceiveSocket.receive(receiveReplyPkt);
+		} catch (IOException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Received Packet.\n");
+		System.out.println("Floor: Received Confirmation.\n");
+	}
+
+	public void sendAndReceiveAck() {
+		byte[] sendMsg = "Requesting Update".getBytes();
+		try {
+			requestUpdatePkt= new DatagramPacket(sendMsg, sendMsg.length, InetAddress.getLocalHost(), 24);
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
+
+		//Print out packet content
+		System.out.println("Floor: Requesting For Elevator Update:");
+		// Send the datagram packet to the server via the send/receive socket.
+		try {
+			sendRecevAck.send(recevUpdatePkt);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Floor: Request sent to Scheduler.\n");
+
+		byte[] data = new byte[5000];
+		recevUpdatePkt = new DatagramPacket(data, data.length);
+		System.out.println("Floor: Waiting for Reply.\n");
+
+		// Block until a datagram packet is received from receiveSocket.
+		try {
+			System.out.println("Waiting..."); // so we know we're waiting
+			sendRecevAck.receive(recevUpdatePkt);
+		} catch (IOException e) {
+			System.out.print("IO Exception: likely:");
+			System.out.println("Receive Socket Timed Out.\n" + e);
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Floor: Received Updated. Elevator Responded Successfully!.\n");
 	}
 
 		/**
