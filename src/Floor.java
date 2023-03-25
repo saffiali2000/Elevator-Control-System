@@ -21,6 +21,8 @@ public class Floor extends Thread {
 	private ArrayList<ArrayList> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
 	private CommandData commandConfirmed; //Command executed by elevator and returned by scheduler
+	
+	private SendReceiveThread sendThread;
 
 
 	/**
@@ -42,6 +44,9 @@ public class Floor extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
+		
+		sendThread = new SendReceiveThread();
+		sendThread.start();
 	}
 
 
@@ -53,15 +58,16 @@ public class Floor extends Thread {
 	 */
 	public void run() {
 		readFile();
-		String tempTime = ((String) fileCommands.get(0).get(0));
-		int tempFloor = ((Integer) fileCommands.get(0).get(1));
-		int tempDest = ((Integer) fileCommands.get(0).get(2));
-		String tempDir = ((String) fileCommands.get(0).get(3));
-		createCommand(tempFloor, tempDest, tempTime,tempDir);//Read from input file here
-		sendAndReceive();
-		//while (true) {
-		//	waitForCommand();
-		//}
+		for (int i = 0; i < fileCommands.size(); i++) {
+			String tempTime = ((String) fileCommands.get(i).get(0));
+			int tempFloor = ((Integer) fileCommands.get(i).get(1));
+			int tempDest = ((Integer) fileCommands.get(i).get(2));
+			String tempDir = ((String) fileCommands.get(i).get(3));
+			/*
+			 * Thread.sleep() until the correct time before sending 
+			 */
+			createCommand(tempFloor, tempDest, tempTime,tempDir);
+		}
 	}
 
 	/**
@@ -187,7 +193,10 @@ public class Floor extends Thread {
 
 		 */
 			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "elevator");
-			commandSent = command;
+			synchronized (this) {
+				commandSent = command;
+				notifyAll();
+			}
 			//commands.addCommand(command);
 			//System.out.println("Floor created command and sent to server!");
 			//commands.notifyAll();
@@ -235,11 +244,33 @@ public class Floor extends Thread {
 	 * Gets the current port number for the socket
 	 * @return portNum
 	 */
-		public int getPortNum(){ return portNum;}
+	public int getPortNum(){ return portNum;}
+	
+	/**
+	 * Thread for sending and receiving, does not block main Floor thread.
+	 */
+	private class SendReceiveThread extends Thread {
+		@Override
+		public void run() {
+			while (commandSent == null) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				sendAndReceive();
+				synchronized (Floor.this) {
+					commandSent = null;
+					notifyAll();
+				}
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		Thread floor1 = new Floor(23);
 		floor1.start();
 	}
-	}
+}
 
 

@@ -189,7 +189,32 @@ public class Elevator extends Thread{
 	 * Sends and receives messages from and to floor via the scheduler, waiting every time it has to receive
 	 */
 	public void sendAndReceive() {
+		try {
+			InetAddress serverAddress = InetAddress.getLocalHost();
+			int serverPort = 23;
+			
+			byte[] reqMsg = "requesting command".getBytes();
+			sendPacket = new DatagramPacket(reqMsg, reqMsg.length,
+					serverAddress, serverPort);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
+		//Print out packet content
+		System.out.println("Elevator: Sending request packet to scheduler:");
+
+		// Send the datagram packet to the server via the send/receive socket.
+		try {
+			sendSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Elevator: Packet sent to scheduler.\n");
+		
+		
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
 		byte[] data = new byte[5000];
@@ -216,10 +241,8 @@ public class Elevator extends Thread{
 		System.out.println("Elevator: Received Packet.\n");
 
 		//change state here!!
-		subsystem.handleButtonPressed();
 		subsystem.setDestination(currentCommand.getDestFloor());
-		subsystem.handleDoorClosed();
-		subsystem.handleArrived();
+		subsystem.handleButtonPressed();
 
 		//Send updated location to scheduler
 		try {
