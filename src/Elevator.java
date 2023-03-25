@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.*;
 
 /**
- * 
+ *
  * Elevator that will consumer information from the command list to eventually move 
  * @author Walid Baitul Islam
  *
@@ -15,18 +15,18 @@ public class Elevator extends Thread{
 	DatagramSocket sendSocket, receiveSocket;
 
 	private int portNum;
-		
+
 	private ElevatorCommands commands; //Shared commands list
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
 	//private ArrayList<CommandData> elevatorList;
 	//private ArrayList<CommandData> returnList;
-	
+
 	private ElevatorSubsystem subsystem;
-	
-	 
+
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param commands ArrayList<CommandData> list of information that will be consumed
 	 */
 	public Elevator(ElevatorCommands commands, int port) {
@@ -46,7 +46,7 @@ public class Elevator extends Thread{
 		}
 		this.subsystem = new ElevatorSubsystem();
 	}
-	
+
 	/**
 	 * @Override default run method
 	 */
@@ -59,7 +59,30 @@ public class Elevator extends Thread{
 		//}
 	}
 
-	
+
+
+
+
+	/* if(error == "doorstuck")
+	 * {
+	 * 		int exit = subsystem.doorError();
+	 * if(exit !=1)
+	 * {
+	 * 	//remove elevator
+	 * }
+	 *
+	 * else if (error =="elevatorStuck")
+	 * {
+	 * 		int exit = subsystem.elevatorStuck();
+	 * 		//remove elevator
+	 * 		// transfer floors to another elevator;
+	 *}
+	 */
+
+
+
+
+
 	///**
 	// * Elevator waits for a command to be processed by the Scheduler, then executes it
 	// */
@@ -99,8 +122,8 @@ public class Elevator extends Thread{
 
 
 	///**
-	 //* Elevator sends response back to Scheduler to confirm its previous command was executed properly
-	 //*/
+	//* Elevator sends response back to Scheduler to confirm its previous command was executed properly
+	//*/
 
 	/*
 	private void respondBack(){
