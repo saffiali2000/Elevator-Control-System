@@ -96,87 +96,91 @@ public class Scheduler extends Thread {
 	 */
 	private void sortCommands() {
 			//Update state
-			schedulerState = SchedulerState.Sorting;
-
-			System.out.println("Server received command and sorting!");
-			//currentCommand = commands.getCommand(0); //Selects next command to be moved
-
-			//Decide if command is valid needs to be refined
-			if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
-				currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
-				currentCommand.getStartFloor > elevatorList.getSize() || currentCommand.getDestFloor > elevatorList.getSize()) {
-				System.out.println("Command invalid. Removing");
-				currentCommand = null;
-			}
-
-			//Determine best elevator to send command to
-			Elevator closestElevator = determineClosestElevator();
-
-			//Send command
-			if (currentCommand.getDest().equals("elevator") ){
-				sendCommandElevator(closestElevator);
-			} else {
-				sendCommandFloor();
-			}
-
-			//Update state
-			schedulerState = SchedulerState.Idle;
-			//commands.notifyAll();
-		//}
+			if (schedulerState == SchedulerState.Sorting) {				
+			
+				System.out.println("Server received command and sorting!");
+				//currentCommand = commands.getCommand(0); //Selects next command to be moved
+	
+				//Decide if command is valid needs to be refined
+				if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
+					currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
+					currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
+					System.out.println("Command invalid. Removing");
+					currentCommand = null;
+				}
+	
+				//Determine best elevator to send command to
+				Elevator closestElevator = determineClosestElevator();
+	
+				//Send command
+				if (currentCommand.getDest().equals("elevator") ){
+					sendCommandElevator(closestElevator);
+				} else {
+					sendCommandFloor();
+				}
+	
+				//Update state
+				schedulerState = SchedulerState.Idle;
+				//commands.notifyAll();
+			//}
+			} else {System.out.println("Scheduler not ready to sort yet");}
 	}
 
 	/**
 	 * Scheduler sends a command to either an Elevator
 	 * @param elevator The elevator the command is sent to
 	 */
-	private void sendCommandElevator(Elevator elevator) {
-		try {
-			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
-			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
-			os.flush();
-			os.writeObject(currentCommand);
-			os.flush();
-
-			//retrieves byte array
-			byte[] sendMsg = byteStream.toByteArray();
-			sendElevatorPacket = new DatagramPacket(sendMsg, sendMsg.length,
-					InetAddress.getLocalHost(), elevator.getPortNum());
-			os.close();
-
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(1);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		//Print out content of the message host is sending
-		System.out.println( "Host: Sending packet to server:");
-		System.out.println("To host: " + sendElevatorPacket.getAddress());
-		System.out.println("Destination host port: " + sendElevatorPacket.getPort());
-		int len = sendElevatorPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Byte Array: ");
-		System.out.print("String Form: ");
-		System.out.println(new String(sendElevatorPacket.getData(),0,len)+"\n");
-
-		// Send the datagram packet to the server via the socket.
-		try {
-			sendReceiveSocket.send(sendElevatorPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Host: Packet sent to server\n");
-
-		}
+	public void sendCommandElevator(Elevator elevator) {
+		if (schedulerState == SchedulerState.Idle) {
+			try {
+				ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+				ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+				os.flush();
+				os.writeObject(currentCommand);
+				os.flush();
+	
+				//retrieves byte array
+				byte[] sendMsg = byteStream.toByteArray();
+				sendElevatorPacket = new DatagramPacket(sendMsg, sendMsg.length,
+						InetAddress.getLocalHost(), elevator.getPortNum());
+				os.close();
+	
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+	
+			//Print out content of the message host is sending
+			System.out.println( "Host: Sending packet to server:");
+			System.out.println("To host: " + sendElevatorPacket.getAddress());
+			System.out.println("Destination host port: " + sendElevatorPacket.getPort());
+			int len = sendElevatorPacket.getLength();
+			System.out.println("Length: " + len);
+			System.out.print("Byte Array: ");
+			System.out.print("String Form: ");
+			System.out.println(new String(sendElevatorPacket.getData(),0,len)+"\n");
+	
+			// Send the datagram packet to the server via the socket.
+			try {
+				sendReceiveSocket.send(sendElevatorPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+	
+			System.out.println("Host: Packet sent to server\n");
+			schedulerState = SchedulerState.Sorting;
+	
+			} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
+	}
 
 	/**
 	 * Scheduler sends a command to a Floor
 	 */
-	private void sendCommandFloor() {
-
+	public void sendCommandFloor() {
+		if (schedulerState == SchedulerState.Idle) {
 		try {
 			sendFloorSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -222,9 +226,119 @@ public class Scheduler extends Thread {
 		}
 
 		System.out.println("Host: Packet sent to server\n");
+		schedulerState = SchedulerState.Sorting;
+		} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
 
 	}
 
+	/**
+	 * Scheduler sends a command to either an Elevator
+	 * @param elevator The elevator the command is sent to
+	 */
+	public void sendCommandElevator(Elevator elevator, CommandData command) {
+		if (schedulerState == SchedulerState.Idle) {
+	
+		try {
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+			os.flush();
+			os.writeObject(command);
+			os.flush();
+
+			//retrieves byte array
+			byte[] sendMsg = byteStream.toByteArray();
+			sendElevatorPacket = new DatagramPacket(sendMsg, sendMsg.length,
+					InetAddress.getLocalHost(), elevator.getPortNum());
+			os.close();
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		//Print out content of the message host is sending
+		System.out.println( "Host: Sending packet to server:");
+		System.out.println("To host: " + sendElevatorPacket.getAddress());
+		System.out.println("Destination host port: " + sendElevatorPacket.getPort());
+		int len = sendElevatorPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.print("Byte Array: ");
+		System.out.print("String Form: ");
+		System.out.println(new String(sendElevatorPacket.getData(),0,len)+"\n");
+
+		// Send the datagram packet to the server via the socket.
+		try {
+			sendReceiveSocket.send(sendElevatorPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Host: Packet sent to server\n");
+		schedulerState = SchedulerState.Sorting;
+		} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
+
+		}
+
+	/**
+	 * Scheduler sends a command to a Floor
+	 */
+	public void sendCommandFloor(CommandData command) {
+		if (schedulerState == SchedulerState.Idle) {
+		
+	
+			try {
+				sendFloorSocket = new DatagramSocket();
+			} catch (SocketException se) {
+				se.printStackTrace();
+				System.exit(1);
+			}
+			try {
+				ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+				ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+				os.flush();
+				os.writeObject(command);
+				os.flush();
+	
+				//retrieves byte array
+				byte[] sendMsg = byteStream.toByteArray();
+				sendFloorPacket = new DatagramPacket(sendMsg, sendMsg.length,
+						receiveFloorPacket.getAddress(), receiveFloorPacket.getPort());
+				os.close();
+	
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+	
+			//Print out content of the message host is sending
+			System.out.println( "Host: Sending packet to server:");
+			System.out.println("To host: " + sendFloorPacket.getAddress());
+			System.out.println("Destination host port: " + sendFloorPacket.getPort());
+			int len = sendFloorPacket.getLength();
+			System.out.println("Length: " + len);
+			System.out.print("Byte Array: ");
+			System.out.print("String Form: ");
+			System.out.println(new String(sendFloorPacket.getData(),0,len)+"\n");
+	
+			// Send the datagram packet to the server via the socket.
+			try {
+				sendFloorSocket.send(sendFloorPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+	
+			System.out.println("Host: Packet sent to server\n");
+			schedulerState = SchedulerState.Sorting;
+		} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
+
+	}
+	
 	/**
 	 * Determines the Elevator closest to the current command's destination
 	 * Algorithm:
@@ -233,7 +347,7 @@ public class Scheduler extends Thread {
 	 *
 	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
-	private Elevator determineClosestElevator(){
+	public Elevator determineClosestElevator(){
 		ArrayList<Elevator> consideredElevators = null;
 		for (Elevator el : elevatorList){
 			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
@@ -246,7 +360,7 @@ public class Scheduler extends Thread {
 		//If no elevators currently moving towards destination floor, consider all elevators
 		if (consideredElevators.isEmpty()) consideredElevators = elevatorList;
 		Elevator closestElevator = elevatorList.get(0);
-		int closest = Math.abs(el.getDestFloor() - closestElevator.getDestFloor());
+		int closest = Math.abs(closestElevator.getDestFloor() - currentCommand.getDestFloor());
 
 		//Iterate through considered elevators and choose the one closest to the next floor
 		for (Elevator el : consideredElevators){
@@ -367,6 +481,10 @@ public class Scheduler extends Thread {
 		}
 		System.out.println("Scheduler: Packet sent to Elevator\n");
 
+	}
+	
+	public CommandData getCurrentCommand() {
+		return currentCommand;
 	}
 	public static void main(String[] args) {
 
