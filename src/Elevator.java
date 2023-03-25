@@ -11,8 +11,8 @@ import java.util.*;
 
 
 public class Elevator extends Thread{
-	DatagramPacket sendPacket, receivePacket;
-	DatagramSocket sendSocket, receiveSocket;
+	DatagramPacket sendPacket, receivePacket,sendInfo;
+	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
 
 	private int portNum;
 
@@ -51,6 +51,7 @@ public class Elevator extends Thread{
 	 * @Override default run method
 	 */
 	public void run() {
+		notifyExists();
 		while(true) {
 			sendAndReceive();
 		}
@@ -143,6 +144,42 @@ public class Elevator extends Thread{
 	}
 
 	 */
+
+	public void notifyExists() {
+		try {
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
+			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+			os.flush();
+			os.writeObject(this);
+			os.flush();
+
+			//retrieves byte array
+			byte[] sendMsg = byteStream.toByteArray();
+			sendInfo = new DatagramPacket(sendMsg, sendMsg.length,
+					receivePacket.getAddress(), 55);
+			os.close();
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+
+		//Print out packet content
+		System.out.println("Elevator: Sending packet to scheduler:");
+
+		// Send the datagram packet to the server via the send/receive socket.
+		try {
+			sendInfoSocket.send(sendInfo);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		System.out.println("Elevator: Packet sent to scheduler.\n");
+	}
 
 	/**
 	 * Receive and send method

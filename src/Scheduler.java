@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class Scheduler extends Thread {
 	public enum SchedulerState {Idle, Sorting};
 	DatagramPacket sendElevatorPacket, receiveFloorPacket, sendFloorPacket,receiveElevator;
-	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorSocket;
+	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorSocket,receiveElev;
 	private ElevatorCommands commands; //Shared command list
 	private CommandData currentCommand; //Currently-managed command
 	private CommandData recevCommand;
@@ -37,6 +37,8 @@ public class Scheduler extends Thread {
 			// send UDP Datagram packets.
 			sendReceiveSocket = new DatagramSocket();
 
+			receiveElev = new DatagramSocket(55);
+
 			// Construct a datagram socket and bind it to port 23
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
@@ -53,12 +55,39 @@ public class Scheduler extends Thread {
 	 * @Override default run method
 	 */
 	public void run() {
+		recevElevInfo();
 		while (true) {
 			receiveFloor();
 			sortCommands();
 			receiveElevator();
 			sortCommands();
 		}
+	}
+
+	private void recevElevInfo(){
+
+		byte[] data = new byte[5000];
+		DatagramPacket receiveActiveElev = new DatagramPacket(data, data.length);
+		System.out.println("Scheduler: Waiting for Packet.\n");
+
+		// Block until a datagram packet is received from receiveSocket.
+		try {
+			System.out.println("Waiting..."); // so we know we're waiting
+			receiveElev.receive(receiveActiveElev);
+			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
+			Object o = is.readObject();
+			is.close();
+			elevatorList.add((Elevator) o);
+
+		} catch (IOException | ClassNotFoundException e) {
+			System.out.print("IO Exception: likely:");
+			System.out.println("Receive Socket Timed Out.\n" + e);
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("Scheduler: Received Packet.\n");
+
 	}
 
 	/**
