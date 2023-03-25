@@ -27,7 +27,7 @@ public class Floor extends Thread {
 	 * Constructor
 	 * @param commands List of commands relevant to this floor
 	 */
-	public Floor(ElevatorCommands commands,int port) {
+	public Floor(int port) {
 		this.portNum = port;
 		this.commands = commands;
 		//this.floorList = new ArrayList<CommandData>();
@@ -236,6 +236,10 @@ public class Floor extends Thread {
 	 * @return portNum
 	 */
 		public int getPortNum(){ return portNum;}
+	public static void main(String[] args) {
+		Thread floor1 = new Floor(23);
+		floor1.start();
+	}
 	}
 
 

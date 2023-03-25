@@ -31,9 +31,9 @@ public class Elevator extends Thread{
 	 *
 	 * @param commands ArrayList<CommandData> list of information that will be consumed
 	 */
-	public Elevator(ElevatorCommands commands, int port) {
+	public Elevator(int port) {
 		this.portNum = port;
-		this.commands = commands;
+		//this.commands = commands;
 		currentCommand = null;
 		//this.elevatorList = commands.getElevatorList();
 		//this.returnList = commands.getReturnElevatorList();
@@ -294,4 +294,15 @@ public class Elevator extends Thread{
 		}
 
 	}
+	public static void main(String[] args) {
+		Thread elevator1 = new Elevator(69);
+		Thread elevator2 = new Elevator(70);
+		Thread elevator3 = new Elevator(71);
+		Thread elevator4 = new Elevator(72);
+		elevator1.start();
+		elevator2.start();
+		elevator3.start();
+		elevator4.start();
+	}
 }
+

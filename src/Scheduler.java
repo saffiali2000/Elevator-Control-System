@@ -27,10 +27,10 @@ public class Scheduler extends Thread {
 	 * Constructor
 	 * @param commands List of elevator commands that the Scheduler will manage
 	 */
-	public Scheduler(ElevatorCommands commands,int portNum,int elevNum) {
+	public Scheduler(int portNum,int elevNum) {
 		schedulerState = SchedulerState.Idle;
 		this.portNum = portNum;
-		this.commands = commands;
+		//this.commands = commands;
 		this.elevatorList = new ArrayList<Elevator>();
 		this.floorList = new ArrayList<Floor>();
 		this.elevNum = elevNum;
@@ -382,5 +382,10 @@ public class Scheduler extends Thread {
 		}
 		System.out.println("Scheduler: Received Packet.\n");
 
+	}
+	public static void main(String[] args) {
+
+		Scheduler scheduler = new Scheduler(23,4);
+		scheduler.start();
 	}
 	}
