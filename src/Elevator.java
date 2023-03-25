@@ -23,6 +23,8 @@ public class Elevator extends Thread{
 
 	private ElevatorSubsystem subsystem;
 
+	private ArrayList<String> errors;
+
 
 	/**
 	 * Constructor
@@ -52,6 +54,7 @@ public class Elevator extends Thread{
 	 */
 	public void run() {
 		notifyExists();
+		readFile();
 		while(true) {
 			sendAndReceive();
 		}
@@ -275,4 +278,20 @@ public class Elevator extends Thread{
 	 * @return portNum
 	 */
 	public int getPortNum(){return portNum;}
+
+	public void readFile(){
+		errors = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader("errors.csv"))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split(",");
+				errors.add(values[0]);
+			}
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
 }
