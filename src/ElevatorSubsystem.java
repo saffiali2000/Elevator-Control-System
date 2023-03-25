@@ -26,7 +26,7 @@ public class ElevatorSubsystem {
 		curr = 1;
 		dest = 1;
 	}
-	
+
 	/**
 	 * Handle the buttonPressed event.
 	 */
@@ -44,7 +44,7 @@ public class ElevatorSubsystem {
 			}
 		}
 	}
-	
+
 	/**
 	 * Simulate the activity of opening the doors.
 	 */
@@ -56,7 +56,7 @@ public class ElevatorSubsystem {
 		}
 		doorOpen = true;
 	}
-	
+
 	/**
 	 * Handle the doorClosed event.
 	 */
@@ -74,7 +74,7 @@ public class ElevatorSubsystem {
 			}
 		}
 	}
-	
+
 	/**
 	 * Handle the arrived event.
 	 */
@@ -84,7 +84,7 @@ public class ElevatorSubsystem {
 			openDoors();
 		}
 	}
-	
+
 	/**
 	 * Move the elevator to the destination floor.
 	 */
@@ -108,7 +108,31 @@ public class ElevatorSubsystem {
 		}
 		curr = dest;
 	}
-	
+	/* door struck error function
+	 *
+	 */
+
+	public int doorError() {
+		System.out.println("ELEVATOR DOORS STUCK!!.");
+		// print the door structure here
+
+		try {
+			Thread.sleep(3000); // sleep for 3 seconds
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("Problem fixed. Doors Closed");
+
+		return 1;
+
+	}
+
+
+	public int elevatorDamage() {
+		System.out.println("Elevator struck between floors");
+		return -1;
+	}
 	/**
 	 * Provide the required time (in seconds) to travel between the specified floors.
 	 * @param from Floor to start from
@@ -122,7 +146,7 @@ public class ElevatorSubsystem {
 			return Math.abs(to - from) * 3 + 4;
 		}
 	}
-	
+
 	/**
 	 * Return the elevator's current state.
 	 * @return The elevator's current state
@@ -130,7 +154,7 @@ public class ElevatorSubsystem {
 	public ElevatorState getState() {
 		return currentState;
 	}
-	
+
 	/**
 	 * Set the destination floor to the given floor.
 	 * @param floor The new destination
@@ -138,7 +162,7 @@ public class ElevatorSubsystem {
 	public void setDestination(int floor) {
 		dest = floor;
 	}
-	
+
 	/**
 	 * Return the current destination floor.
 	 * @return The current destination
@@ -146,7 +170,7 @@ public class ElevatorSubsystem {
 	public int getDestination() {
 		return dest;
 	}
-	
+
 	/**
 	 * Return the current floor.
 	 * @return The current floor
