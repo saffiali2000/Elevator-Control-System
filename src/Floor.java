@@ -15,7 +15,6 @@ public class Floor extends Thread {
 	DatagramSocket sendReceiveSocket;
 	DatagramSocket sendRecevAck;
 	private int portNum;
-	private ElevatorCommands commands; //Shared list of commands
 	private ArrayList<ArrayList> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
 	private SendReceiveThread sendThread;
