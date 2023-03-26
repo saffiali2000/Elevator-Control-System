@@ -11,13 +11,14 @@ import java.util.*;
 
 
 public class Elevator extends Thread{
-	DatagramPacket requestCommandPkt, receiveReplyPkt,sendInfoPkt,recevCommandPkt, sendUpdatePkt;
-	DatagramSocket receiveCommandSocket,sendInfoSocket,senUpdateSocket;
+	DatagramPacket sendPacket, receivePacket,sendInfo;
+	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
 	private int portNum;
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
 	private ElevatorSubsystem subsystem;
 
 	private ArrayList<String> errors;
+	private boolean isReady; //Denotes if the elevator is ready to receive a command
 
 
 	/**
@@ -28,11 +29,12 @@ public class Elevator extends Thread{
 	public Elevator(int port) {
 		this.portNum = port;
 		currentCommand = null;
+		this.setReady(false);
 		try {
 			// Construct a datagram socket and bind it to port 69
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveCommandSocket = new DatagramSocket(port);
+			receiveSocket = new DatagramSocket(port);
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
@@ -70,6 +72,7 @@ public class Elevator extends Thread{
 
 	public void notifyExists() {
 		try {
+			setReady(true);
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
 			os.flush();
@@ -78,8 +81,8 @@ public class Elevator extends Thread{
 
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
-			sendInfoPkt = new DatagramPacket(sendMsg, sendMsg.length,
-					InetAddress.getLocalHost(), 55);
+			sendInfo = new DatagramPacket(sendMsg, sendMsg.length,
+					receivePacket.getAddress(), 55);
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -95,7 +98,7 @@ public class Elevator extends Thread{
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendInfoSocket.send(sendInfoPkt);
+			sendInfoSocket.send(sendInfo);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -113,7 +116,7 @@ public class Elevator extends Thread{
 			InetAddress serverAddress = InetAddress.getLocalHost();
 
 			byte[] reqMsg = "requesting command".getBytes();
-			requestCommandPkt = new DatagramPacket(reqMsg, reqMsg.length,
+			sendPacket = new DatagramPacket(reqMsg, reqMsg.length,
 					serverAddress, portNum);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -121,29 +124,30 @@ public class Elevator extends Thread{
 		}
 
 		//Print out packet content
-		System.out.println("Elevator: Sending request to scheduler:");
+		System.out.println("Elevator: Sending request packet to scheduler:");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			receiveCommandSocket.send(requestCommandPkt);
+			sendSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Request sent to scheduler.\n");
+		System.out.println("Elevator: Packet sent to scheduler.\n");
 
 
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
 		byte[] data = new byte[5000];
-		recevCommandPkt = new DatagramPacket(data, data.length);
-		System.out.println("Elevator: Waiting for Command.\n");
+		receivePacket = new DatagramPacket(data, data.length);
+		System.out.println("Elevator: Waiting for Packet.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			receiveCommandSocket.receive(recevCommandPkt);
+			receiveSocket.receive(receivePacket);
+			setReady(false);
 			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
 			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
 			Object o = is.readObject();
@@ -157,7 +161,7 @@ public class Elevator extends Thread{
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Received Command.\n");
+		System.out.println("Elevator: Received Packet.\n");
 
 		//change state here!!
 		subsystem.setDestination(currentCommand.getDestFloor());
@@ -171,6 +175,7 @@ public class Elevator extends Thread{
 
 		//Send updated location to scheduler
 		try {
+			setReady(true);
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
 			os.flush();
@@ -179,8 +184,8 @@ public class Elevator extends Thread{
 
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
-			sendUpdatePkt = new DatagramPacket(sendMsg, sendMsg.length,
-					recevCommandPkt.getAddress(), requestCommandPkt.getPort());
+			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
+					receivePacket.getAddress(), receivePacket.getPort());
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -192,26 +197,26 @@ public class Elevator extends Thread{
 
 
 		//Print out packet content
-		System.out.println("Elevator: Sending Update to scheduler:");
+		System.out.println("Elevator: Sending packet to scheduler:");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			senUpdateSocket.send(sendUpdatePkt);
+			sendSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Update sent to scheduler.\n");
+		System.out.println("Elevator: Packet sent to scheduler.\n");
 
 		byte[] data = new byte[5000];
-		receiveReplyPkt = new DatagramPacket(data, data.length);
+		receivePacket = new DatagramPacket(data, data.length);
 		System.out.println("Elevator: Waiting for Confirmation Reply .\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			senUpdateSocket.receive(receiveReplyPkt);
+			receiveSocket.receive(receivePacket);
 		} catch (IOException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
@@ -258,6 +263,15 @@ public class Elevator extends Thread{
 		}
 
 	}
+	
+	/**
+	 * Returns the destination floor of the elevator's current command
+	 * @return destFloor
+	 */
+	public int getDestFloor() {
+		return currentCommand.getDestFloor();
+	}
+	
 	public static void main(String[] args) {
 		Thread elevator1 = new Elevator(69);
 		Thread elevator2 = new Elevator(70);
@@ -267,6 +281,14 @@ public class Elevator extends Thread{
 		elevator2.start();
 		elevator3.start();
 		elevator4.start();
+	}
+
+	public boolean isReady() {
+		return isReady;
+	}
+
+	public void setReady(boolean isReady) {
+		this.isReady = isReady;
 	}
 }
 
