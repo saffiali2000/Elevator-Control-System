@@ -59,8 +59,9 @@ public class Scheduler extends Thread {
 		while (true) {
 			receiveFloorCommand();
 			sortCommands();
+			recevUpdateFloor();
 			receiveUpdateElevator();
-			sendRecevUpdateFloor();
+			sendUpdateFloor();
 		}
 	}
 
@@ -170,9 +171,8 @@ public class Scheduler extends Thread {
 	/**
 	 * Scheduler sends a command to a Floor
 	 */
-	public void sendRecevUpdateFloor() {
+	public void recevUpdateFloor() {
 		byte[] data = new byte[5000];
-		DatagramPacket sendReply;
 		DatagramPacket receiveUpdateRequest = new DatagramPacket(data, data.length);
 		System.out.println("Scheduler: Waiting for Update Request.\n");
 
@@ -188,7 +188,9 @@ public class Scheduler extends Thread {
 			System.exit(1);
 		}
 		System.out.println("Scheduler: Received Update Request.\n");
-
+	}
+	public void sendUpdateFloor(){
+		DatagramPacket sendReply;
 		byte[] sendMsg = "Elevator received Command!".getBytes();
 		try {
 			sendReply = new DatagramPacket(sendMsg, sendMsg.length,
@@ -208,10 +210,6 @@ public class Scheduler extends Thread {
 		}
 
 		System.out.println("Scheduler: Update sent to floor\n");
-
-
-
-
 	}
 	
 	/**

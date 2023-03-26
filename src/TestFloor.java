@@ -31,8 +31,8 @@ class TestFloor {
 
     @Test
     void testInitial() {
-        scheduler = new Scheduler(commands,0);
-        floor = new Floor(commands,0);
+        scheduler = new Scheduler(0,5);
+        floor = new Floor(0);
         floor.start();
         scheduler.start();
         assertTrue(floor.isAlive());
@@ -43,8 +43,8 @@ class TestFloor {
 
     @Test
     void testSendAndRecieve() {
-        scheduler = new Scheduler(commands,0);
-        floor = new Floor(commands,0);
+        scheduler = new Scheduler(1,5);
+        floor = new Floor(1);
         floor.start();
         scheduler.start();
         //CommandData command = new CommandData(1, 3, "09:30:00", "up");
