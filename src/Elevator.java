@@ -52,21 +52,20 @@ public class Elevator extends Thread{
 		}
 	}
 
-	/* if(error == "doorstuck")
-	 * {
-	 * 		int exit = subsystem.doorError();
-	 * if(exit !=1)
-	 * {
-	 * 	//remove elevator
-	 * }
-	 *
-	 * else if (error =="elevatorStuck")
-	 * {
-	 * 		int exit = subsystem.elevatorStuck();
-	 * 		//remove elevator
-	 * 		// transfer floors to another elevator;
-	 *}
-	 */
+	public void triggerErrors() {
+		for (String error : errors) {
+			if (error == "doorstuck") {
+				int exit = subsystem.doorError();
+				if (exit != 1) {
+					//remove elevator
+				} else if (error == "elevatorStuck") {
+					int exit = subsystem.elevatorStuck();
+					//remove elevator
+					// transfer floors to another elevator;
+				}
+			}
+		}
+	}
 
 	public void notifyExists() {
 		try {
