@@ -59,7 +59,7 @@ public class Elevator extends Thread{
 				if (exit != 1) {
 					//remove elevator
 				} else if (error == "elevatorStuck") {
-					int exit = subsystem.elevatorStuck();
+					//int exit = subsystem.elevatorStuck();
 					//remove elevator
 					// transfer floors to another elevator;
 				}
