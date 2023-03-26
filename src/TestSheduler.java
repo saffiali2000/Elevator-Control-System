@@ -47,7 +47,7 @@ class TestScheduler {
 
     @Test
     /**
-     * Tests scheduler with a test input file (TODO)
+     * Tests scheduler with a test input file 
      * All contained methods are private but are all present and produce their own outputs when used
      */
     public void testScheduler(){
@@ -67,20 +67,8 @@ class TestScheduler {
         scheduler.start();
         elevator1.start();
         elevator2.start();
-        
-        /*
-        floor1.createCommand(1, 2, System.currentTimeMillis(), "up");
-        delayFor(10000);
-        floor2.createCommand(2, 1, System.currentTimeMillis(), "down");
-        delayFor(10000);
-        floor1.createCommansd(1, 1, System.currentTimeMillis(), "up");
-        delayFor(1000);
-        floor1.createCommand(1, 1, System.currentTimeMillis(), "jkhmn");
-        delayFor(1000);
-        floor1.createCommand(13, 1, System.currentTimeMillis(), "down");
-        delayFor(1000);
-        floor1.createCommand(1, 11, System.currentTimeMillis(), "up");
-        */
+       
+        ((Floor) floor1).readFile("schedulerTestCommands.csv");
 
         //Expected output is two working commands, with all outputs, then a bunch of failed commands (to and from same floor, impossible name for direction, etc.)
         //Will also contain outputs from UDP passing in private methods
