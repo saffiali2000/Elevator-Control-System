@@ -19,6 +19,8 @@ public class Scheduler extends Thread {
 	
 	private SchedulerState schedulerState;
 
+	private SendReceiveElevator sendThread;
+
 	private int elevNum;
 
 	private int portNum;
@@ -46,6 +48,8 @@ public class Scheduler extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
+		sendThread = new Scheduler.SendReceiveElevator();
+		sendThread.start();
 	}
 
 	
@@ -59,9 +63,6 @@ public class Scheduler extends Thread {
 		while (true) {
 			receiveFloorCommand();
 			sortCommands();
-			recevUpdateFloor();
-			receiveUpdateElevator();
-			sendUpdateFloor();
 		}
 	}
 
@@ -364,6 +365,17 @@ public class Scheduler extends Thread {
 	public CommandData getCurrentCommand() {
 		return currentCommand;
 	}
+
+	private class SendReceiveElevator extends Thread {
+		@Override
+		public void run() {
+			while (true) {
+				recevUpdateFloor();
+				receiveUpdateElevator();
+				sendUpdateFloor();
+				}
+			}
+		}
 	public static void main(String[] args) {
 
 		Scheduler scheduler = new Scheduler(23,4);
