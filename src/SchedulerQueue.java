@@ -16,7 +16,7 @@ public class SchedulerQueue extends WorkQueue{
 		if (workItem.getDest().equals("elevator")) { //Command is to move an elevator
 			scheduler.sendCommandElevator(scheduler.determineClosestElevator(), scheduler.getCurrentCommand());
 		} else { //Command is a confirmation from elevator to floor
-			scheduler.sendCommandFloor(scheduler.getCurrentCommand());
+			scheduler.sendUpdateFloor();
 		}
 	}
 
