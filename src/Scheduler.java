@@ -26,6 +26,7 @@ public class Scheduler extends Thread {
 	private int elevNum;
 
 	private int portNum;
+	public static final int WELL_KNOWN_PORT = 23;
 
 	/**
 	 * Constructor
@@ -426,7 +427,7 @@ public class Scheduler extends Thread {
 		}
 	public static void main(String[] args) {
 
-		Scheduler scheduler = new Scheduler(23,4);
+		Scheduler scheduler = new Scheduler(WELL_KNOWN_PORT,4);
 		scheduler.start();
 	}
 	}

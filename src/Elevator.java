@@ -10,7 +10,9 @@ import java.util.*;
  */
 
 
-public class Elevator extends Thread{
+public class Elevator extends Thread implements Serializable {
+	public static final long serialVersionUID = 1;
+	
 	DatagramPacket sendPacket, receivePacket,sendInfo;
 	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
 	private int portNum;
@@ -35,6 +37,8 @@ public class Elevator extends Thread{
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
 			receiveSocket = new DatagramSocket(port);
+			sendInfoSocket = new DatagramSocket(); //TODO port?
+			sendSocket = new DatagramSocket();
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
@@ -76,13 +80,15 @@ public class Elevator extends Thread{
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
 			os.flush();
-			os.writeObject(this);
+			os.writeObject(this.subsystem);
 			os.flush();
+			
+			InetAddress serverAddress = InetAddress.getLocalHost();
 
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
 			sendInfo = new DatagramPacket(sendMsg, sendMsg.length,
-					receivePacket.getAddress(), 55);
+					serverAddress, Scheduler.WELL_KNOWN_PORT);
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -273,10 +279,10 @@ public class Elevator extends Thread{
 	}
 	
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(69);
-		Thread elevator2 = new Elevator(70);
-		Thread elevator3 = new Elevator(71);
-		Thread elevator4 = new Elevator(72);
+		Thread elevator1 = new Elevator(5069);
+		Thread elevator2 = new Elevator(5070);
+		Thread elevator3 = new Elevator(5071);
+		Thread elevator4 = new Elevator(5072);
 		elevator1.start();
 		elevator2.start();
 		elevator3.start();

@@ -1,4 +1,4 @@
-
+import java.io.Serializable;
 
 /**
  * Simulates the subsystems of an elevator.
@@ -6,7 +6,9 @@
  *
  */
 
-public class ElevatorSubsystem {
+public class ElevatorSubsystem implements Serializable {
+	public static final long serialVersionUID = 1;
+	
 	public enum ElevatorState {Idle, Open, MovingUp, MovingDown};
 	/** The Elevator's current state. */
 	private ElevatorState currentState;
@@ -183,7 +185,9 @@ public class ElevatorSubsystem {
 		return curr;
 	}
 	
-	private class MotorThread extends Thread {
+	private class MotorThread extends Thread implements Serializable {
+		public static final long serialVersionUID = 1;
+		
 		/** Signal for motor to move */
 		private boolean motorSignal;
 		/** Signal to open doors */
