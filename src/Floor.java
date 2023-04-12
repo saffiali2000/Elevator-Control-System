@@ -23,7 +23,7 @@ public class Floor extends Thread {
 
 	/**
 	 * Constructor
-	 * @param commands List of commands relevant to this floor
+	 * @param port The floor's port number
 	 */
 	public Floor(int port) {
 		this.portNum = port;
@@ -38,29 +38,24 @@ public class Floor extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		readFile();
+		
 		sendThread = new SendReceiveThread();
 		sendThread.start();
 	}
 
-
-	/**
-	 * @Override default run method
-	 */
 	/**
 	 * @Override default run method
 	 */
 	public void run() {
 		readFile();
 		startTime = System.currentTimeMillis();
+		
+		//Constructs commands from csv input file
 		for (int i = 0; i < fileCommands.size(); i++) {
 			String tempTime = ((String) fileCommands.get(i).get(0));
 			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
 			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
 			String tempDir = ((String) fileCommands.get(i).get(3));
-			/*
-			 * Thread.sleep() until the correct time before sending 
-			 */
 			createCommand(tempFloor, tempDest, tempTime,tempDir);
 		}
 		while(true){
@@ -70,7 +65,7 @@ public class Floor extends Thread {
 
 	/**
 	 * Read file method
-	 * Reads csv file for list of commands to send
+	 * Reads csv file for list of commands to send and stores strings in an ArrayList
 	 */
 	public void readFile(){
 		fileCommands = new ArrayList<>();
@@ -119,9 +114,8 @@ public class Floor extends Thread {
 			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
 			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
 			String tempDir = ((String) fileCommands.get(i).get(3));
-			/*
-			 * Thread.sleep() until the correct time before sending 
-			 */
+			
+			//Print command information
 			System.out.println("Time: " + tempTime + " Start floor: " + tempFloor + " Dest floor: " + tempDest + " Dir: " + tempDir);
 		}
 	}
@@ -134,9 +128,11 @@ public class Floor extends Thread {
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));			
-			Long currentCommandTime = convertToMillis(commandSent.getTime());
 			
-			while (currentCommandTime > System.currentTimeMillis()); //Wait until time for next command to be sent
+			//Wait until time for next command to be sent
+			Long currentCommandTime = convertToMillis(commandSent.getTime());
+			while (currentCommandTime > System.currentTimeMillis()); 
+			
 			os.flush();
 			os.writeObject(commandSent);
 			os.flush();
@@ -185,7 +181,11 @@ public class Floor extends Thread {
 		System.out.println("Floor: Received Confirmation.\n");
 	}
 
+	/**
+	 * Asks scheduler for a command completed confirmation and waits until it receives an acknowledgement
+	 */
 	public void sendAndReceiveAck() {
+		//Create update request packet
 		byte[] sendMsg = "Requesting Update".getBytes();
 		try {
 			requestUpdatePkt= new DatagramPacket(sendMsg, sendMsg.length, InetAddress.getLocalHost(), 24);
@@ -223,13 +223,13 @@ public class Floor extends Thread {
 		System.out.println("Floor: Received Updated. Elevator Responded Successfully!.\n");
 	}
 
-		/**
-		 * Creates a floor-source command and sends it to Scheduler
-		 * @param startFloor Starting floor of elevator
-		 * @param destFloor Destination floor of elevator
-		 * @param dir Up or down
-		 */
-
+	/**
+	 * Creates a floor-source command and sends it to Scheduler
+	 * @param startFloor Starting floor of elevator
+	 * @param destFloor Destination floor of elevator
+	 * @param time Time in format hh.mm.ss.mmm after the creation of the system that the command should be sent
+	 * @param dir Up or down
+	 */
 	public void createCommand(int startFloor, int destFloor, String time, String dir) {
 			CommandData command = new CommandData(time, startFloor, destFloor, dir, "floor", "elevator");
 			synchronized (this) {
@@ -279,6 +279,10 @@ public class Floor extends Thread {
 		return time;
 	}
 	
+	/**
+	 * Main runnable method
+	 * @param args default
+	 */
 	public static void main(String[] args) {
 		Thread floor1 = new Floor(23);
 		floor1.start();

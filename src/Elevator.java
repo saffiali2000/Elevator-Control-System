@@ -13,20 +13,20 @@ import java.util.*;
 public class Elevator extends Thread {
 	//public static final long serialVersionUID = 1;
 	
-	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate;
-	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
-	private int portNum;
+	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate; //UDP data packets
+	DatagramSocket sendSocket, receiveSocket,sendInfoSocket; //UDP data sockets
+	private int portNum; //This Elevator's port number
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
-	private ElevatorSubsystem subsystem;
+	private ElevatorSubsystem subsystem; //This Elevator's subsystem
 
-	private ArrayList<String[]> errors;
+	private ArrayList<String[]> errors; //List of errors which will affect this elevator
 	private boolean isReady; //Denotes if the elevator is ready to receive a command
 
 
 	/**
 	 * Constructor
 	 *
-	 * @param commands ArrayList<CommandData> list of information that will be consumed
+	 * @param port Port number that will be used for UDP data transfer
 	 */
 	public Elevator(int port) {
 		this.portNum = port;
@@ -74,8 +74,12 @@ public class Elevator extends Thread {
 	 *}
 	 */
 
+	/**
+	 * Notifies the scheduler via RPC that the elevator was initialized along with information about the elevator
+	 */
 	public void notifyExists() {
 		try {
+			//Prepare information packet for sending
 			setReady(true);
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
@@ -118,6 +122,7 @@ public class Elevator extends Thread {
 	 * Sends and receives messages from and to floor via the scheduler, waiting every time it has to receive
 	 */
 	public void sendAndReceive() {
+		//Create request packet information
 		try {
 			InetAddress serverAddress = InetAddress.getLocalHost();
 
@@ -177,7 +182,7 @@ public class Elevator extends Thread {
 		System.out.println("Elevator: Received Packet.\n");
 		subsystem.setCommand(currentCommand);
 
-		//change state here!!
+		//Subsystem updates state
 		subsystem.setDestination(currentCommand.getDestFloor());
 		subsystem.handleButtonPressed();
 	}
@@ -262,6 +267,9 @@ public class Elevator extends Thread {
 	 */
 	public int getPortNum(){return portNum;}
 
+	/**
+	 * Reads an input file containing errors for error handling and stores them in an ArrayList
+	 */
 	public void readFile(){
 		errors = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader("errors.csv"))) {
@@ -286,6 +294,10 @@ public class Elevator extends Thread {
 		return currentCommand.getDestFloor();
 	}
 	
+	/**
+	 * Main runnable method
+	 * @param args default
+	 */
 	public static void main(String[] args) {
 		Thread elevator1 = new Elevator(150);
 		//Thread elevator2 = new Elevator(5070);
@@ -297,6 +309,7 @@ public class Elevator extends Thread {
 		//elevator4.start();
 	}
 
+	//Getters and setters
 	public boolean isReady() {
 		return isReady;
 	}
