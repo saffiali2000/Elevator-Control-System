@@ -14,6 +14,7 @@ public class Floor extends Thread {
 	DatagramPacket sendCommandPkt, receiveReplyPkt, requestUpdatePkt, recevUpdatePkt;
 	DatagramSocket sendReceiveSocket;
 	DatagramSocket sendRecevAck;
+	private long startTime;
 	private int portNum;
 	private ArrayList<ArrayList> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
@@ -51,6 +52,7 @@ public class Floor extends Thread {
 	 */
 	public void run() {
 		readFile();
+		startTime = System.currentTimeMillis();
 		for (int i = 0; i < fileCommands.size(); i++) {
 			String tempTime = ((String) fileCommands.get(i).get(0));
 			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
@@ -78,7 +80,7 @@ public class Floor extends Thread {
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(",");
 				for (int i= 0 ;i< values.length;i++) {
-					commandsRead.add(values[i]);
+					commandsRead.add(values);
 				}
 				fileCommands.add(commandsRead);
 			}
@@ -96,7 +98,10 @@ public class Floor extends Thread {
 	public void sendAndReceive() {
 		try {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
-			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
+			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));			
+			Long currentCommandTime = convertToMillis(commandSent.getTime());
+			
+			while (currentCommandTime > System.currentTimeMillis()); //Wait until time for next command to be sent
 			os.flush();
 			os.writeObject(commandSent);
 			os.flush();
@@ -119,7 +124,7 @@ public class Floor extends Thread {
 		System.out.println("Floor: Sending command to scheduler:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendReceiveSocket.send(sendCommandPkt);
+			sendRecevAck.send(recevUpdatePkt);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -157,7 +162,7 @@ public class Floor extends Thread {
 		System.out.println("Floor: Requesting For Elevator Update:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendRecevAck.send(requestUpdatePkt);
+			sendRecevAck.send(recevUpdatePkt);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -222,6 +227,21 @@ public class Floor extends Thread {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Converts a string in format hh.mm.ss.mmm to a long for scheduling
+	 * @param input Time field of the input command
+	 * @return Long conversion of the time field of the input command (in milliseconds)
+	 */
+	public long convertToMillis(String input) {
+		long time = 0;
+		String[] values = input.split("[.]"); 
+		time += (Long.parseLong(values[0]) * 3600000); //hours
+		time += (Long.parseLong(values[1]) * 60000); //minutes
+		time += (Long.parseLong(values[2]) * 1000); //seconds
+		time += (Long.parseLong(values[3])); //milliseconds
+		return time;
 	}
 	
 	public static void main(String[] args) {
