@@ -30,6 +30,9 @@ class TestFloor {
     }
 
     @Test
+    /**
+	 * Tests suite initialization
+	 */
     void testInitial() {
         scheduler = new Scheduler(0,5);
         floor = new Floor(0);
@@ -42,6 +45,9 @@ class TestFloor {
     }
 
     @Test
+    /**
+	 * Tests command send and receive
+	 */
     void testSendAndRecieve() {
         scheduler = new Scheduler(1,5);
         floor = new Floor(1);
@@ -54,6 +60,9 @@ class TestFloor {
     }
     
     @Test
+    /**
+	 * Tests time string conversion to milliseconds
+	 */
     void testConvertToMillis() {
     	assertEquals(((Floor) floor).convertToMillis("00.00.00.000"), 0);
     	assertEquals(((Floor) floor).convertToMillis("00.00.03.100"), 3100);

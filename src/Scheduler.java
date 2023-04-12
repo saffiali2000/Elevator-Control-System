@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class Scheduler extends Thread {
 	public enum SchedulerState {Idle, Sorting};
 	DatagramPacket sendElevCommandPkt, recevFloorCommandPkt, sendFloorConfirm,receiveElevUpdate,sendElevReply;
-	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorReply,receiveElevInfo,sendFloorUpdate,sendCommand;
+	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorReply,receiveElevInfo,sendFloorUpdate;
 	private CommandData currentCommand; //Currently-managed command
 
 	private CommandData recevCommand;
@@ -26,7 +26,7 @@ public class Scheduler extends Thread {
 	private int elevNum;
 
 	private int portNum;
-	//public static final int WELL_KNOWN_PORT = 23;
+	public static final int WELL_KNOWN_PORT = 23;
 
 	/**
 	 * Constructor
@@ -110,19 +110,18 @@ public class Scheduler extends Thread {
 				//currentCommand = commands.getCommand(0); //Selects next command to be moved
 	
 				//Decide if command is valid needs to be refined
-				//if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
-				//	currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
-				//	currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
-				//	System.out.println("Command invalid. Removing");
-				//	currentCommand = null;
-				//}
+				if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
+					currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
+					currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
+					System.out.println("Command invalid. Removing");
+					currentCommand = null;
+				}
 	
 				//Determine best elevator to send command to
 				ElevatorSubsystem closestElevator = determineClosestElevator();
 	
 				//Send command
 				if (currentCommand.getDest().equals("elevator") ) {
-					schedulerState = SchedulerState.Idle;
 					sendCommandElevator(closestElevator);
 				}
 	
@@ -161,26 +160,14 @@ public class Scheduler extends Thread {
 	
 			//Print out content of the message host is sending
 			System.out.println( "Scheduler: Sending command to elevator");
-
-			try {
-				sendCommand = new DatagramSocket();
-			} catch (SocketException se) {
-				se.printStackTrace();
-				System.exit(1);
-			}
-
+	
 			// Send the datagram packet to the server via the socket.
 			try {
-				sendFloorReply.send(sendElevCommandPkt);
+				sendReceiveSocket.send(sendElevCommandPkt);
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.exit(1);
 			}
-
-			System.out.println(sendElevCommandPkt.getPort());
-			System.out.println(sendElevCommandPkt.getAddress());
-			System.out.println(sendCommand.getPort());
-			System.out.println(sendCommand.getInetAddress());
 	
 			System.out.println("Scheduler: Command sent to elevator\n");
 			schedulerState = SchedulerState.Sorting;
@@ -232,13 +219,11 @@ public class Scheduler extends Thread {
 
 		System.out.println("Scheduler: Update sent to floor\n");
 	}
-
-
+	
 	/**
 	 * Scheduler sends a command to either an Elevator
 	 * @param elevator The elevator the command is sent to
 	 */
-	/*
 	public void sendCommandElevator(ElevatorSubsystem elevator, CommandData command) {
 		if (schedulerState == SchedulerState.Idle) {
 			try {
@@ -263,7 +248,7 @@ public class Scheduler extends Thread {
 	
 			//Print out content of the message host is sending
 			System.out.println( "Scheduler: Sending command to elevator");
-
+	
 			// Send the datagram packet to the server via the socket.
 			try {
 				sendReceiveSocket.send(sendElevCommandPkt);
@@ -278,7 +263,7 @@ public class Scheduler extends Thread {
 			} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
 	}
 
-	 */
+	
 	
 	/**
 	 * Determines the Elevator closest to the current command's destination
@@ -289,14 +274,10 @@ public class Scheduler extends Thread {
 	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
 	public ElevatorSubsystem determineClosestElevator(){
-		ArrayList<ElevatorSubsystem> consideredElevators = new ArrayList<>();
+		ArrayList<ElevatorSubsystem> consideredElevators = null;
 		for (ElevatorSubsystem el : elevatorList){
 			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
-
-			if (compCommand == null){
-				consideredElevators.add(el);
-			}
-			else if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
+			if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
 					(compCommand.getDestFloor() > currentCommand.getDestFloor() && compCommand.getDir().equals("up"))){
 				consideredElevators.add(el);
 			}
@@ -448,7 +429,8 @@ public class Scheduler extends Thread {
 			}
 		}
 	public static void main(String[] args) {
-		Scheduler scheduler = new Scheduler(23,1);
+
+		Scheduler scheduler = new Scheduler(WELL_KNOWN_PORT,1);
 		scheduler.start();
 	}
 	}
