@@ -52,5 +52,11 @@ class TestFloor {
         //floor.sendAndReceive();
         //assertEquals(command, floor.getCommandConfirmed());
     }
+    
+    @Test
+    void testConvertToMillis() {
+    	assertEquals(((Floor) floor).convertToMillis("00.00.00.000"), 0);
+    	assertEquals(((Floor) floor).convertToMillis("00.00.03.100"), 3100);
+    }
 
 }
