@@ -91,6 +91,41 @@ public class Floor extends Thread {
 		}
 
 	}
+	
+	/**
+	 * Read file method
+	 * Overloaded for testing
+	 * Reads given csv file for list of commands to send and prints commands out to console
+	 */
+	public void readFile(String fileName){
+		fileCommands = new ArrayList<>();
+		ArrayList<String> commandsRead = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split(",");
+				for (int i= 0 ;i< values.length;i++) {
+					commandsRead.add(values[i]);
+				}
+				fileCommands.add(commandsRead);
+			}
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		for (int i = 0; i < fileCommands.size(); i++) {
+			String tempTime = ((String) fileCommands.get(i).get(0));
+			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
+			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
+			String tempDir = ((String) fileCommands.get(i).get(3));
+			/*
+			 * Thread.sleep() until the correct time before sending 
+			 */
+			System.out.println("Time: " + tempTime + " Start floor: " + tempFloor + " Dest floor: " + tempDest + " Dir: " + tempDir);
+		}
+	}
+	
 	/**
 	 * Receive and send method
 	 * Sends and receives messages from and to elevator via the scheduler, waiting every time it has to receive
@@ -249,5 +284,3 @@ public class Floor extends Thread {
 		floor1.start();
 	}
 }
-
-

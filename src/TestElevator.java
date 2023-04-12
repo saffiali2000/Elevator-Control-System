@@ -40,9 +40,12 @@ class TestElevator {
     }
 
     @Test
+    /**
+     * Tests suite initialization
+     */
     void testInitial() {
-        scheduler = new Scheduler(commands,1);
-        elevator = new Elevator(commands,2);
+        scheduler = new Scheduler(67,1);
+        elevator = new Elevator(52);
         elevator.start();
         scheduler.start();
         assertTrue(elevator.isAlive());
@@ -52,15 +55,21 @@ class TestElevator {
     }
 
     @Test
+    /**
+     * Tests correctness of command send and receive
+     */
     void testSendAndRecieve() {
-        scheduler = new Scheduler(commands,3);
-        elevator = new Elevator(commands,4);
+        scheduler = new Scheduler(67,1);
+        elevator = new Elevator(52);
         scheduler.start();
         elevator.start();
         sendCommand();
         //assertEquals(commandSent,scheduler.getElevatorReturn);
     }
 
+    /**
+     * Tests ability to send command
+     */
     public void sendCommand(){
         DatagramSocket sendReceiveSocket = null;
         try {
@@ -68,7 +77,7 @@ class TestElevator {
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        commandSent = new CommandData("9:00",0,9,"up","floor","elevator");
+        commandSent = new CommandData("00.00.01.000",0,9,"up","floor","elevator");
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
             ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
