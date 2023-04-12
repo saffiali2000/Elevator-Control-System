@@ -1,8 +1,11 @@
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Elevator{
-    // Fields to represent the state of the elevator
+public class Elevator {
     private int currentFloor;
     private boolean doorOpen;
     private boolean moving;
@@ -10,6 +13,9 @@ public class Elevator{
     private int faultFloor;
     private Timer floorTimer;
     private Timer doorTimer;
+    private Socket socket;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
 
     // Constructor to initialize elevator state
     public Elevator() {
@@ -20,6 +26,9 @@ public class Elevator{
         faultFloor = -1;
         floorTimer = new Timer();
         doorTimer = new Timer();
+        socket = null;
+        inputStream = null;
+        outputStream = null;
     }
 
     // Getter for current floor
@@ -77,11 +86,11 @@ public class Elevator{
         floorTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // Check if the elevator has reached the correct floor
-                if (currentFloor != floor) {
-                    // Assume the elevator is stuck between floors or the floor sensor has failed
+                if (currentFloor != floor) { // Check if elevator is stuck between floors
                     fault = true;
                     faultFloor = currentFloor;
+                    sendFaultData(); // Send fault data to scheduler
+                    stopElevator(); // Stop elevator movement
                 }
             }
         }, timeout);
@@ -98,11 +107,10 @@ public class Elevator{
         doorTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // Check if the door is open
-                if (!doorOpen) {
-                    // Assume the door is stuck closed or the door sensor has failed
+                if (!doorOpen) { // Check if door is stuck closed
                     fault = true;
                     faultFloor = currentFloor;
+                    sendFaultData(); // Send fault data to scheduler
                 }
             }
         }, timeout);
@@ -113,4 +121,16 @@ public class Elevator{
         doorTimer.cancel();
         doorTimer = new Timer();
     }
-}
+
+    // Connects to the scheduler using a data socket
+    public void connectToScheduler(String host, int port) {
+        try {
+            socket = new Socket(host, port);
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            inputStream = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            System.err.println("Error connecting to scheduler: " + e.getMessage());
+        }
+    }
+
+// Sends elevator state data to the scheduler
