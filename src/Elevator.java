@@ -19,7 +19,7 @@ public class Elevator extends Thread implements Serializable {
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
 	private ElevatorSubsystem subsystem;
 
-	private ArrayList<String> errors;
+	private ArrayList<String[]> errors;
 	private boolean isReady; //Denotes if the elevator is ready to receive a command
 
 
@@ -260,7 +260,7 @@ public class Elevator extends Thread implements Serializable {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(",");
-				errors.add(values[0]);
+				errors.add(values);
 			}
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
