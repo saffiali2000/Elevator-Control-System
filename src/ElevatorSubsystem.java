@@ -21,16 +21,22 @@ public class ElevatorSubsystem implements Serializable {
 	/** The elevator's motor thread. */
 	private MotorThread motor;
 
+	private int portNum;
+
+	private CommandData currentCommand;
+
 	/**
 	 * Create a new ElevatorSubsystem in the Idle state with doors closed.
 	 */
-	public ElevatorSubsystem() {
+	public ElevatorSubsystem(int portNum) {
+		this.portNum = portNum;
 		currentState = ElevatorState.Idle;
 		doorOpen = false;
 		curr = 1;
 		dest = 1;
 		motor = new MotorThread();
 		motor.start();
+		currentCommand = null;
 	}
 
 	/**
@@ -183,6 +189,18 @@ public class ElevatorSubsystem implements Serializable {
 	 */
 	public int getCurrentFloor() {
 		return curr;
+	}
+
+	public CommandData getCurrentCommand(){
+		return currentCommand;
+	}
+
+	public void setCommand(CommandData command){
+		this.currentCommand = command;
+	}
+
+	public int getPortNum(){
+		return portNum;
 	}
 	
 	private class MotorThread extends Thread implements Serializable {

@@ -13,10 +13,11 @@ public class Scheduler extends Thread {
 	public enum SchedulerState {Idle, Sorting};
 	DatagramPacket sendElevCommandPkt, recevFloorCommandPkt, sendFloorConfirm,receiveElevUpdate,sendElevReply;
 	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorReply,receiveElevInfo,sendFloorUpdate;
+
 	private ElevatorCommands commands; //Shared command list
 	private CommandData currentCommand; //Currently-managed command
 	private CommandData recevCommand;
-	private ArrayList<Elevator> elevatorList;
+	private ArrayList<ElevatorSubsystem> elevatorList;
 	private ArrayList<Floor> floorList;
 	
 	private SchedulerState schedulerState;
@@ -35,7 +36,7 @@ public class Scheduler extends Thread {
 	public Scheduler(int portNum,int elevNum) {
 		schedulerState = SchedulerState.Idle;
 		this.portNum = portNum;
-		this.elevatorList = new ArrayList<Elevator>();
+		this.elevatorList = new ArrayList<ElevatorSubsystem>();
 		this.floorList = new ArrayList<Floor>();
 		this.elevNum = elevNum;
 		try {
@@ -44,15 +45,15 @@ public class Scheduler extends Thread {
 			// send UDP Datagram packets.
 			sendReceiveSocket = new DatagramSocket();
 
-			receiveElevInfo = new DatagramSocket(55);
+			receiveElevInfo = new DatagramSocket(5507);
 			sendFloorUpdate = new DatagramSocket(24);
 
 		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		sendThread = new Scheduler.SendReceiveElevator();
-		sendThread.start();
+		//sendThread = new Scheduler.SendReceiveElevator();
+		//sendThread.start();
 	}
 
 	
@@ -83,7 +84,7 @@ public class Scheduler extends Thread {
 			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
 			Object o = is.readObject();
 			is.close();
-			elevatorList.add((Elevator) o);
+			elevatorList.add((ElevatorSubsystem) o);
 
 		} catch (IOException | ClassNotFoundException e) {
 			System.out.print("IO Exception: likely:");
@@ -115,7 +116,7 @@ public class Scheduler extends Thread {
 				}
 	
 				//Determine best elevator to send command to
-				Elevator closestElevator = determineClosestElevator();
+				ElevatorSubsystem closestElevator = determineClosestElevator();
 	
 				//Send command
 				if (currentCommand.getDest().equals("elevator") ) {
@@ -133,7 +134,7 @@ public class Scheduler extends Thread {
 	 * Scheduler sends a command to either an Elevator
 	 * @param elevator The elevator the command is sent to
 	 */
-	public void sendCommandElevator(Elevator elevator) {
+	public void sendCommandElevator(ElevatorSubsystem elevator) {
 		if (schedulerState == SchedulerState.Idle) {
 			try {
 				ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
@@ -221,7 +222,7 @@ public class Scheduler extends Thread {
 	 * Scheduler sends a command to either an Elevator
 	 * @param elevator The elevator the command is sent to
 	 */
-	public void sendCommandElevator(Elevator elevator, CommandData command) {
+	public void sendCommandElevator(ElevatorSubsystem elevator, CommandData command) {
 		if (schedulerState == SchedulerState.Idle) {
 			try {
 				ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
@@ -270,9 +271,9 @@ public class Scheduler extends Thread {
 	 *
 	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
-	public Elevator determineClosestElevator(){
-		ArrayList<Elevator> consideredElevators = null;
-		for (Elevator el : elevatorList){
+	public ElevatorSubsystem determineClosestElevator(){
+		ArrayList<ElevatorSubsystem> consideredElevators = null;
+		for (ElevatorSubsystem el : elevatorList){
 			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
 			if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
 					(compCommand.getDestFloor() > currentCommand.getDestFloor() && compCommand.getDir().equals("up"))){
@@ -282,12 +283,12 @@ public class Scheduler extends Thread {
 
 		//If no elevators currently moving towards destination floor, consider all elevators
 		if (consideredElevators.isEmpty()) consideredElevators = elevatorList;
-		Elevator closestElevator = elevatorList.get(0);
-		int closest = Math.abs(closestElevator.getDestFloor() - currentCommand.getDestFloor());
+		ElevatorSubsystem closestElevator = elevatorList.get(0);
+		int closest = Math.abs(closestElevator.getDestination() - currentCommand.getDestFloor());
 
 		//Iterate through considered elevators and choose the one closest to the next floor
-		for (Elevator el : consideredElevators){
-			if (Math.abs(el.getDestFloor() - closestElevator.getDestFloor()) < closest) closestElevator = el;
+		for (ElevatorSubsystem el : consideredElevators){
+			if (Math.abs(el.getDestination() - closestElevator.getDestination()) < closest) closestElevator = el;
 		}
 
 		System.out.println("Closest elevator is: " + elevatorList.indexOf(closestElevator));
@@ -376,8 +377,8 @@ public class Scheduler extends Thread {
 			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
 			Object o = is.readObject();
 			is.close();
-			Elevator tempElevator = (Elevator) o;
-			for (Elevator elevator : elevatorList){
+			ElevatorSubsystem tempElevator = (ElevatorSubsystem) o;
+			for (ElevatorSubsystem elevator : elevatorList){
 				if (elevator.getPortNum() == tempElevator.getPortNum()){
 					index = elevatorList.indexOf(elevator);
 				}
@@ -427,7 +428,7 @@ public class Scheduler extends Thread {
 		}
 	public static void main(String[] args) {
 
-		Scheduler scheduler = new Scheduler(WELL_KNOWN_PORT,4);
+		Scheduler scheduler = new Scheduler(WELL_KNOWN_PORT,1);
 		scheduler.start();
 	}
 	}

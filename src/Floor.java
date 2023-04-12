@@ -53,8 +53,8 @@ public class Floor extends Thread {
 		readFile();
 		for (int i = 0; i < fileCommands.size(); i++) {
 			String tempTime = ((String) fileCommands.get(i).get(0));
-			int tempFloor = ((Integer) fileCommands.get(i).get(1));
-			int tempDest = ((Integer) fileCommands.get(i).get(2));
+			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
+			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
 			String tempDir = ((String) fileCommands.get(i).get(3));
 			/*
 			 * Thread.sleep() until the correct time before sending 
@@ -78,7 +78,7 @@ public class Floor extends Thread {
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(",");
 				for (int i= 0 ;i< values.length;i++) {
-					commandsRead.add(values);
+					commandsRead.add(values[i]);
 				}
 				fileCommands.add(commandsRead);
 			}
@@ -157,7 +157,7 @@ public class Floor extends Thread {
 		System.out.println("Floor: Requesting For Elevator Update:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendRecevAck.send(recevUpdatePkt);
+			sendRecevAck.send(requestUpdatePkt);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

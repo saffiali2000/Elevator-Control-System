@@ -10,10 +10,10 @@ import java.util.*;
  */
 
 
-public class Elevator extends Thread implements Serializable {
-	public static final long serialVersionUID = 1;
+public class Elevator extends Thread {
+	//public static final long serialVersionUID = 1;
 	
-	DatagramPacket sendPacket, receivePacket,sendInfo;
+	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate;
 	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
 	private int portNum;
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
@@ -36,14 +36,16 @@ public class Elevator extends Thread implements Serializable {
 			// Construct a datagram socket and bind it to port 69
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(port);
-			sendInfoSocket = new DatagramSocket(); //TODO port?
+			receiveSocket = new DatagramSocket(portNum,InetAddress.getLocalHost());
+			sendInfoSocket = new DatagramSocket();
 			sendSocket = new DatagramSocket();
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
 		}
-		this.subsystem = new ElevatorSubsystem();
+		this.subsystem = new ElevatorSubsystem(this.portNum);
 	}
 
 	/**
@@ -88,7 +90,7 @@ public class Elevator extends Thread implements Serializable {
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
 			sendInfo = new DatagramPacket(sendMsg, sendMsg.length,
-					serverAddress, Scheduler.WELL_KNOWN_PORT);
+					serverAddress, 5507);
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -122,7 +124,7 @@ public class Elevator extends Thread implements Serializable {
 			InetAddress serverAddress = InetAddress.getLocalHost();
 
 			byte[] reqMsg = "requesting command".getBytes();
-			sendPacket = new DatagramPacket(reqMsg, reqMsg.length,
+			sendRequest = new DatagramPacket(reqMsg, reqMsg.length,
 					serverAddress, portNum);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -134,7 +136,7 @@ public class Elevator extends Thread implements Serializable {
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendSocket.send(sendPacket);
+			sendSocket.send(sendRequest);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -145,29 +147,38 @@ public class Elevator extends Thread implements Serializable {
 
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
-		byte[] data = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("Elevator: Waiting for Packet.\n");
+		byte[] tempData = new byte[5000];
+		DatagramPacket receiveRequest = null;
+		try {
+			receiveRequest = new DatagramPacket(tempData, tempData.length, InetAddress.getLocalHost(),portNum);
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
+		System.out.println("Elevator: Waiting for Command.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			receiveSocket.receive(receivePacket);
-			setReady(false);
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
-			currentCommand = (CommandData) o;
+			System.out.println("Elevator: Local port number after receiving confirmation reply packet: " + receiveSocket.getLocalPort());
+			receiveSocket.receive(receiveRequest);
+			System.out.println("Elevator: Local port number after receiving confirmation reply packet: " + receiveSocket.getLocalPort());
+			//ByteArrayInputStream byteStream = new ByteArrayInputStream(tempData);
+			//ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
+			//Object o = is.readObject();
+			//is.close();
+			//elevatorList.add((ElevatorSubsystem) o);
 
-		} catch (IOException | ClassNotFoundException e) {
+		} catch (IOException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
+		//} catch (ClassNotFoundException e) {
+		//	throw new RuntimeException(e);
 		}
 
 		System.out.println("Elevator: Received Packet.\n");
+		subsystem.setCommand(currentCommand);
 
 		//change state here!!
 		subsystem.setDestination(currentCommand.getDestFloor());
@@ -190,8 +201,8 @@ public class Elevator extends Thread implements Serializable {
 
 			//retrieves byte array
 			byte[] sendMsg = byteStream.toByteArray();
-			sendPacket = new DatagramPacket(sendMsg, sendMsg.length,
-					receivePacket.getAddress(), receivePacket.getPort());
+			sendUpdate = new DatagramPacket(sendMsg, sendMsg.length,
+					InetAddress.getLocalHost(), portNum);
 			os.close();
 
 		} catch (UnknownHostException e) {
@@ -207,7 +218,7 @@ public class Elevator extends Thread implements Serializable {
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendSocket.send(sendPacket);
+			sendSocket.send(sendUpdate);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -216,13 +227,13 @@ public class Elevator extends Thread implements Serializable {
 		System.out.println("Elevator: Packet sent to scheduler.\n");
 
 		byte[] data = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
+		receiveUpdate = new DatagramPacket(data, data.length);
 		System.out.println("Elevator: Waiting for Confirmation Reply .\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			receiveSocket.receive(receivePacket);
+			receiveSocket.receive(receiveUpdate);
 		} catch (IOException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
@@ -279,14 +290,14 @@ public class Elevator extends Thread implements Serializable {
 	}
 	
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(5069);
-		Thread elevator2 = new Elevator(5070);
-		Thread elevator3 = new Elevator(5071);
-		Thread elevator4 = new Elevator(5072);
+		Thread elevator1 = new Elevator(65013);
+		//Thread elevator2 = new Elevator(5070);
+		//Thread elevator3 = new Elevator(5071);
+		//Thread elevator4 = new Elevator(5072);
 		elevator1.start();
-		elevator2.start();
-		elevator3.start();
-		elevator4.start();
+		//elevator2.start();
+		//elevator3.start();
+		//elevator4.start();
 	}
 
 	public boolean isReady() {
