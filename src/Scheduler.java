@@ -110,18 +110,19 @@ public class Scheduler extends Thread {
 				//currentCommand = commands.getCommand(0); //Selects next command to be moved
 	
 				//Decide if command is valid needs to be refined
-				if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
-					currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
-					currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
-					System.out.println("Command invalid. Removing");
-					currentCommand = null;
-				}
+				//if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
+					//currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
+					//currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
+					//System.out.println("Command invalid. Removing");
+					//currentCommand = null;
+				//}
 	
 				//Determine best elevator to send command to
 				ElevatorSubsystem closestElevator = determineClosestElevator();
 	
 				//Send command
 				if (currentCommand.getDest().equals("elevator") ) {
+					schedulerState = SchedulerState.Idle;
 					sendCommandElevator(closestElevator);
 				}
 	
@@ -274,10 +275,13 @@ public class Scheduler extends Thread {
 	 * @return closestElevator The Elevator which is closest to the destination floor
 	 */
 	public ElevatorSubsystem determineClosestElevator(){
-		ArrayList<ElevatorSubsystem> consideredElevators = null;
+		ArrayList<ElevatorSubsystem> consideredElevators = new ArrayList<>();
 		for (ElevatorSubsystem el : elevatorList){
 			CommandData compCommand = el.getCurrentCommand(); //If empty ignore tba later once elevators implementation is finalized
-			if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
+			if (compCommand == null){
+				consideredElevators.add(el);
+			}
+			else if ((compCommand.getDestFloor() < currentCommand.getDestFloor() && compCommand.getDir().equals("down")) ||
 					(compCommand.getDestFloor() > currentCommand.getDestFloor() && compCommand.getDir().equals("up"))){
 				consideredElevators.add(el);
 			}
