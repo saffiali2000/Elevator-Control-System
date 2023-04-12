@@ -36,14 +36,12 @@ public class Elevator extends Thread {
 			// Construct a datagram socket and bind it to port 69
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(portNum,InetAddress.getLocalHost());
+			receiveSocket = new DatagramSocket(portNum);
 			sendInfoSocket = new DatagramSocket();
 			sendSocket = new DatagramSocket();
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
-		} catch (UnknownHostException e) {
-			throw new RuntimeException(e);
 		}
 		this.subsystem = new ElevatorSubsystem(this.portNum);
 	}
@@ -159,22 +157,21 @@ public class Elevator extends Thread {
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			System.out.println("Elevator: Local port number after receiving confirmation reply packet: " + receiveSocket.getLocalPort());
+			receiveSocket.connect(InetAddress.getLocalHost(),portNum);
 			receiveSocket.receive(receiveRequest);
-			System.out.println("Elevator: Local port number after receiving confirmation reply packet: " + receiveSocket.getLocalPort());
-			//ByteArrayInputStream byteStream = new ByteArrayInputStream(tempData);
-			//ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			//Object o = is.readObject();
-			//is.close();
-			//elevatorList.add((ElevatorSubsystem) o);
+			ByteArrayInputStream byteStream = new ByteArrayInputStream(tempData);
+			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
+			Object o = is.readObject();
+			is.close();
+			currentCommand = (CommandData) o;
 
 		} catch (IOException e) {
 			System.out.print("IO Exception: likely:");
 			System.out.println("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
-		//} catch (ClassNotFoundException e) {
-		//	throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
 		}
 
 		System.out.println("Elevator: Received Packet.\n");
@@ -290,7 +287,7 @@ public class Elevator extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(65013);
+		Thread elevator1 = new Elevator(150);
 		//Thread elevator2 = new Elevator(5070);
 		//Thread elevator3 = new Elevator(5071);
 		//Thread elevator4 = new Elevator(5072);

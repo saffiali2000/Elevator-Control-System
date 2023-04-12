@@ -44,6 +44,7 @@ public class Scheduler extends Thread {
 			// port on the local host machine. This socket will be used to
 			// send UDP Datagram packets.
 			sendReceiveSocket = new DatagramSocket();
+			receiveSocket = new DatagramSocket(23);
 
 			receiveElevInfo = new DatagramSocket(5507);
 			sendFloorUpdate = new DatagramSocket(24);
@@ -52,8 +53,8 @@ public class Scheduler extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		//sendThread = new Scheduler.SendReceiveElevator();
-		//sendThread.start();
+		sendThread = new Scheduler.SendReceiveElevator();
+		sendThread.start();
 	}
 
 	
@@ -305,11 +306,11 @@ public class Scheduler extends Thread {
 		// to 100 bytes long (the length of the byte array).
 		byte[] data = new byte[5000];
 		recevFloorCommandPkt = new DatagramPacket(data, data.length);
-		try {
-			receiveSocket = new DatagramSocket(23);
-		} catch (SocketException e) {
-			throw new RuntimeException(e);
-		}
+		//try {
+			//receiveSocket = new DatagramSocket(23);
+		//} catch (SocketException e) {
+		//	throw new RuntimeException(e);
+		//}
 		System.out.println("Scheduler: Waiting for Command.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
