@@ -13,9 +13,8 @@ public class Scheduler extends Thread {
 	public enum SchedulerState {Idle, Sorting};
 	DatagramPacket sendElevCommandPkt, recevFloorCommandPkt, sendFloorConfirm,receiveElevUpdate,sendElevReply;
 	DatagramSocket sendReceiveSocket, receiveSocket,sendFloorReply,receiveElevInfo,sendFloorUpdate;
-
-	private ElevatorCommands commands; //Shared command list
 	private CommandData currentCommand; //Currently-managed command
+
 	private CommandData recevCommand;
 	private ArrayList<ElevatorSubsystem> elevatorList;
 	private ArrayList<Floor> floorList;
@@ -103,9 +102,11 @@ public class Scheduler extends Thread {
 	 */
 	private void sortCommands() {
 			//Update state
-			if (schedulerState == SchedulerState.Sorting) {				
+			if (schedulerState != SchedulerState.Sorting) {
 			
 				System.out.println("Server received command and sorting!");
+				schedulerState = SchedulerState.Sorting;
+
 				//currentCommand = commands.getCommand(0); //Selects next command to be moved
 	
 				//Decide if command is valid needs to be refined
