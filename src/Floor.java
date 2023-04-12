@@ -16,7 +16,7 @@ public class Floor extends Thread {
 	DatagramSocket sendRecevAck;
 	private long startTime;
 	private int portNum;
-	private ArrayList<ArrayList> fileCommands;
+	private ArrayList<ArrayList<String>> fileCommands;
 	private CommandData commandSent; //Original command created and sent to scheduler
 	private SendReceiveThread sendThread;
 
@@ -38,7 +38,7 @@ public class Floor extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		
+		readFile();
 		sendThread = new SendReceiveThread();
 		sendThread.start();
 	}
@@ -74,13 +74,13 @@ public class Floor extends Thread {
 	 */
 	public void readFile(){
 		fileCommands = new ArrayList<>();
-		ArrayList commandsRead = new ArrayList<>();
+		ArrayList<String> commandsRead = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader("commands.csv"))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(",");
 				for (int i= 0 ;i< values.length;i++) {
-					commandsRead.add(values);
+					commandsRead.add(values[i]);
 				}
 				fileCommands.add(commandsRead);
 			}
@@ -215,13 +215,13 @@ public class Floor extends Thread {
 		@Override
 		public void run() {
 			while (commandSent == null) {
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				sendAndReceive();
 				synchronized (Floor.this) {
+					try {
+						Floor.this.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					sendAndReceive();
 					commandSent = null;
 					notifyAll();
 				}
