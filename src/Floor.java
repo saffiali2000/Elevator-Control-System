@@ -124,7 +124,7 @@ public class Floor extends Thread {
 		System.out.println("Floor: Sending command to scheduler:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendRecevAck.send(sendCommandPkt);
+			sendReceiveSocket.send(sendCommandPkt);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
