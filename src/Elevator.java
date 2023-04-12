@@ -13,8 +13,8 @@ import java.util.*;
 public class Elevator extends Thread {
 	//public static final long serialVersionUID = 1;
 	
-	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate;
-	DatagramSocket sendSocket, receiveSocket,sendInfoSocket;
+	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate,receiveCommand;
+	DatagramSocket sendSocket, receiveSocket,sendInfoSocket,sendReceive;
 	private int portNum;
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
 	private ElevatorSubsystem subsystem;
@@ -39,6 +39,7 @@ public class Elevator extends Thread {
 			receiveSocket = new DatagramSocket(portNum);
 			sendInfoSocket = new DatagramSocket();
 			sendSocket = new DatagramSocket();
+			sendReceive = new DatagramSocket();
 		} catch (SocketException se) {   // Can't create the socket.
 			se.printStackTrace();
 			System.exit(1);
@@ -109,7 +110,7 @@ public class Elevator extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
+		sendInfoSocket.close();
 		System.out.println("Elevator: Packet sent to scheduler.\n");
 	}
 
@@ -119,11 +120,11 @@ public class Elevator extends Thread {
 	 */
 	public void sendAndReceive() {
 		try {
-			InetAddress serverAddress = InetAddress.getLocalHost();
+			//InetAddress serverAddress = InetAddress.getLocalHost();
 
 			byte[] reqMsg = "requesting command".getBytes();
 			sendRequest = new DatagramPacket(reqMsg, reqMsg.length,
-					serverAddress, portNum);
+					InetAddress.getLocalHost(), portNum);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -134,7 +135,7 @@ public class Elevator extends Thread {
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
-			sendSocket.send(sendRequest);
+			sendReceive.send(sendRequest);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -146,19 +147,13 @@ public class Elevator extends Thread {
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
 		byte[] tempData = new byte[5000];
-		DatagramPacket receiveRequest = null;
-		try {
-			receiveRequest = new DatagramPacket(tempData, tempData.length, InetAddress.getLocalHost(),portNum);
-		} catch (UnknownHostException e) {
-			throw new RuntimeException(e);
-		}
+		receiveCommand = new DatagramPacket(tempData, tempData.length);
 		System.out.println("Elevator: Waiting for Command.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
-			receiveSocket.connect(InetAddress.getLocalHost(),portNum);
-			receiveSocket.receive(receiveRequest);
+			sendReceive.receive(receiveCommand);
 			ByteArrayInputStream byteStream = new ByteArrayInputStream(tempData);
 			ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(byteStream));
 			Object o = is.readObject();
@@ -287,7 +282,7 @@ public class Elevator extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(150);
+		Thread elevator1 = new Elevator(1500);
 		//Thread elevator2 = new Elevator(5070);
 		//Thread elevator3 = new Elevator(5071);
 		//Thread elevator4 = new Elevator(5072);

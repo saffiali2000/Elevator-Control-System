@@ -164,7 +164,11 @@ public class Scheduler extends Thread {
 	
 			// Send the datagram packet to the server via the socket.
 			try {
+				System.out.println(sendElevCommandPkt.getPort());
+				System.out.println(sendElevCommandPkt.getAddress());
 				sendReceiveSocket.send(sendElevCommandPkt);
+				System.out.println(sendReceiveSocket.getPort());
+				System.out.println(sendReceiveSocket.getInetAddress());
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -220,52 +224,7 @@ public class Scheduler extends Thread {
 
 		System.out.println("Scheduler: Update sent to floor\n");
 	}
-	
-	/**
-	 * Scheduler sends a command to either an Elevator
-	 * @param elevator The elevator the command is sent to
-	 */
-	public void sendCommandElevator(ElevatorSubsystem elevator, CommandData command) {
-		if (schedulerState == SchedulerState.Idle) {
-			try {
-				ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
-				ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
-				os.flush();
-				os.writeObject(currentCommand);
-				os.flush();
-	
-				//retrieves byte array
-				byte[] sendMsg = byteStream.toByteArray();
-				sendElevCommandPkt = new DatagramPacket(sendMsg, sendMsg.length,
-						InetAddress.getLocalHost(), elevator.getPortNum());
-				os.close();
-	
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-				System.exit(1);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-	
-			//Print out content of the message host is sending
-			System.out.println( "Scheduler: Sending command to elevator");
-	
-			// Send the datagram packet to the server via the socket.
-			try {
-				sendReceiveSocket.send(sendElevCommandPkt);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
-	
-			System.out.println("Scheduler: Command sent to elevator\n");
-			schedulerState = SchedulerState.Sorting;
-	
-			} else {System.out.println("Scheduler is still sorting, cannot accept command immediately");}
-	}
 
-	
-	
 	/**
 	 * Determines the Elevator closest to the current command's destination
 	 * Algorithm:

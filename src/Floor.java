@@ -52,10 +52,10 @@ public class Floor extends Thread {
 		
 		//Constructs commands from csv input file
 		for (int i = 0; i < fileCommands.size(); i++) {
-			String tempTime = ((String) fileCommands.get(i).get(0));
-			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
-			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
-			String tempDir = ((String) fileCommands.get(i).get(3));
+			String tempTime = fileCommands.get(i).get(0);
+			int tempFloor = (Integer.parseInt(fileCommands.get(i).get(1)));
+			int tempDest = (Integer.parseInt(fileCommands.get(i).get(2)));
+			String tempDir = fileCommands.get(i).get(3);
 			createCommand(tempFloor, tempDest, tempTime,tempDir);
 		}
 		while(true){
@@ -110,10 +110,10 @@ public class Floor extends Thread {
 			throw new RuntimeException(e);
 		}
 		for (int i = 0; i < fileCommands.size(); i++) {
-			String tempTime = ((String) fileCommands.get(i).get(0));
-			int tempFloor = (Integer.parseInt((String)fileCommands.get(i).get(1)));
-			int tempDest = (Integer.parseInt((String) fileCommands.get(i).get(2)));
-			String tempDir = ((String) fileCommands.get(i).get(3));
+			String tempTime = fileCommands.get(i).get(0);
+			int tempFloor = (Integer.parseInt(fileCommands.get(i).get(1)));
+			int tempDest = (Integer.parseInt(fileCommands.get(i).get(2)));
+			String tempDir = fileCommands.get(i).get(3);
 			
 			//Print command information
 			System.out.println("Time: " + tempTime + " Start floor: " + tempFloor + " Dest floor: " + tempDest + " Dir: " + tempDir);
@@ -156,6 +156,7 @@ public class Floor extends Thread {
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
 			sendReceiveSocket.send(sendCommandPkt);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
