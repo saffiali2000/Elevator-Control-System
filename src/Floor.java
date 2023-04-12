@@ -258,7 +258,7 @@ public class Floor extends Thread {
 					}
 					sendAndReceive();
 					commandSent = null;
-					notifyAll();
+					Floor.this.notifyAll();
 				}
 			}
 		}
