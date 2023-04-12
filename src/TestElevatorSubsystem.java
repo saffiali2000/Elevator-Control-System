@@ -15,16 +15,22 @@ class TestElevatorSubsystem {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		subsystem = new ElevatorSubsystem();
+		subsystem = new ElevatorSubsystem(24);
 	}
 	
 	@Test
+	/**
+	 * Tests suite initialization
+	 */
 	void testInitialState() {
 		assertEquals(ElevatorSubsystem.ElevatorState.Idle, subsystem.getState());
 		assertEquals(1, subsystem.getDestination());
 	}
 
 	@Test
+	/**
+	 * Tests subsystem reaction to button pressed stimulus
+	 */
 	void testHandleButtonPressed() {
 		subsystem.handleButtonPressed();
 		assertEquals(ElevatorSubsystem.ElevatorState.Open, subsystem.getState());
@@ -44,6 +50,9 @@ class TestElevatorSubsystem {
 	}
 
 	@Test
+	/**
+	 * Tests subsystem reaction to door closed stimulus
+	 */
 	void testHandleDoorClosed() {
 		subsystem.handleDoorClosed();
 		assertEquals(ElevatorSubsystem.ElevatorState.Idle, subsystem.getState()); // No change
@@ -68,6 +77,9 @@ class TestElevatorSubsystem {
 	}
 
 	@Test
+	/**
+	 * Tests subsystem reaction to elevator arrived stimulus
+	 */
 	void testHandleArrived() {
 		subsystem.handleArrived();
 		assertEquals(ElevatorSubsystem.ElevatorState.Idle, subsystem.getState());
