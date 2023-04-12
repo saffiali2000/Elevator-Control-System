@@ -30,7 +30,8 @@ public class Scheduler extends Thread {
 
 	/**
 	 * Constructor
-	 * @param commands List of elevator commands that the Scheduler will manage
+	 * @param portNum The Scheduler's port number
+	 * @param elevNum Number of Elevators that the Scheduler will manage
 	 */
 	public Scheduler(int portNum,int elevNum) {
 		schedulerState = SchedulerState.Idle;
@@ -70,6 +71,9 @@ public class Scheduler extends Thread {
 		}
 	}
 
+	/**
+	 * Receives an update from an elevator via UDP
+	 */
 	private void recevElevInfo(){
 
 		byte[] data = new byte[5000];
@@ -92,8 +96,8 @@ public class Scheduler extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
 		System.out.println("Scheduler: Received Info.\n");
-
 	}
 
 	/**
@@ -101,15 +105,13 @@ public class Scheduler extends Thread {
 	 * No sorting algorithm yet
 	 */
 	private void sortCommands() {
-			//Update state
+			//Check state
 			if (schedulerState != SchedulerState.Sorting) {
 			
 				System.out.println("Server received command and sorting!");
 				schedulerState = SchedulerState.Sorting;
-
-				//currentCommand = commands.getCommand(0); //Selects next command to be moved
 	
-				//Decide if command is valid needs to be refined
+				//Decide if command is valid 
 				if (!(currentCommand.getDir().equals("up") || currentCommand.getDir().equals("down") || currentCommand.getDest().equals("floor") || currentCommand.getDest().equals("server") || currentCommand.getDest().equals("elevator") ||
 					currentCommand.getSource().equals("floor") || currentCommand.getSource().equals("server") || currentCommand.getSource().equals("elevator")) || currentCommand.getDest().equals(currentCommand.getSource()) ||
 					currentCommand.getStartFloor() > elevatorList.size() || currentCommand.getDestFloor() > elevatorList.size()) {
@@ -197,6 +199,9 @@ public class Scheduler extends Thread {
 		System.out.println("Scheduler: Received Update Request.\n");
 	}
 	
+	/**
+	 * Scheduler send an update to the floor subsystem via UDP
+	 */
 	public void sendUpdateFloor(){
 		DatagramPacket sendReply;
 		byte[] sendMsg = "Elevator received Command!".getBytes();
@@ -221,7 +226,7 @@ public class Scheduler extends Thread {
 	}
 	
 	/**
-	 * Scheduler sends a command to either an Elevator
+	 * Scheduler sends a command to an Elevator
 	 * @param elevator The elevator the command is sent to
 	 */
 	public void sendCommandElevator(ElevatorSubsystem elevator, CommandData command) {
@@ -414,10 +419,16 @@ public class Scheduler extends Thread {
 
 	}
 	
+	//Getter
 	public CommandData getCurrentCommand() {
 		return currentCommand;
 	}
 
+	/**
+	 * Background thread that manages elevator and floor updates
+	 * @author user
+	 *
+	 */
 	private class SendReceiveElevator extends Thread {
 		@Override
 		public void run() {
@@ -428,9 +439,14 @@ public class Scheduler extends Thread {
 				}
 			}
 		}
+	
+	/**
+	 * Main runnable method
+	 * @param args default
+	 */
 	public static void main(String[] args) {
 
 		Scheduler scheduler = new Scheduler(WELL_KNOWN_PORT,1);
 		scheduler.start();
 	}
-	}
+}

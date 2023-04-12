@@ -21,11 +21,12 @@ public class ElevatorSubsystem implements Serializable {
 	/** The elevator's motor thread. */
 	private MotorThread motor;
 
-	private int portNum;
+	private int portNum; //The subsystem's port number
 
-	private CommandData currentCommand;
+	private CommandData currentCommand; //The subsystem's current command
 
 	/**
+	 * Constructor
 	 * Create a new ElevatorSubsystem in the Idle state with doors closed.
 	 */
 	public ElevatorSubsystem(int portNum) {
@@ -108,6 +109,8 @@ public class ElevatorSubsystem implements Serializable {
 		} else {
 			inc = -1;
 		}
+		
+		//Calculate time to travel between floors and delay for that amount of time
 		try {
 			for (int i = start; i != dest; i += inc) {
 				double seconds = timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + inc, dest);
@@ -120,10 +123,11 @@ public class ElevatorSubsystem implements Serializable {
 		}
 		curr = dest;
 	}
-	/* door struck error function
-	 *
+	
+	/**
+	 * Elevator door stuck error
+	 * @return default
 	 */
-
 	public int doorError() {
 		System.out.println("ELEVATOR DOORS STUCK!!.");
 		// print the door structure here
@@ -140,11 +144,16 @@ public class ElevatorSubsystem implements Serializable {
 
 	}
 
-
+	/**
+	 * Elevator stuck between floors error
+	 * @return default
+	 */
+	
 	public int elevatorDamage() {
 		System.out.println("Elevator struck between floors");
 		return -1;
 	}
+	
 	/**
 	 * Provide the required time (in seconds) to travel between the specified floors.
 	 * @param from Floor to start from
@@ -183,10 +192,7 @@ public class ElevatorSubsystem implements Serializable {
 		return dest;
 	}
 
-	/**
-	 * Return the current floor.
-	 * @return The current floor
-	 */
+	//Getters and setters
 	public int getCurrentFloor() {
 		return curr;
 	}
@@ -203,6 +209,11 @@ public class ElevatorSubsystem implements Serializable {
 		return portNum;
 	}
 	
+	/**
+	 * Private motor thread for subsystem
+	 * @author Henry Lin
+	 *
+	 */
 	private class MotorThread extends Thread implements Serializable {
 		public static final long serialVersionUID = 1;
 		
@@ -216,9 +227,10 @@ public class ElevatorSubsystem implements Serializable {
 			openDoorSignal = false;
 		}
 		
-		@Override
+		@Override 
 		public void run() {
 			synchronized (this) {
+				//Wait until either motor or doors opening light activated
 				while (!motorSignal && !openDoorSignal) {
 					try {
 						wait();
@@ -243,11 +255,17 @@ public class ElevatorSubsystem implements Serializable {
 			}
 		}
 		
+		/**
+		 * Turns on motor engaged light
+		 */
 		public synchronized void signalMove() {
 			motorSignal = true;
 			notifyAll();
 		}
 		
+		/**
+		 * Turns on doors opening light
+		 */
 		public synchronized void signalOpenDoors() {
 			openDoorSignal = true;
 			notifyAll();
