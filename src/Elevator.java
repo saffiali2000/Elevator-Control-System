@@ -11,13 +11,13 @@ import java.util.*;
 
 
 public class Elevator extends Thread {
-	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate,receiveCommand;
-	DatagramSocket sendSocket, receiveSocket,sendInfoSocket,sendReceive;
-	private int portNum, portNum2;
-	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
-	private ElevatorSubsystem subsystem;
+	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate,receiveCommand; 
+	DatagramSocket sendSocket, receiveSocket,sendInfoSocket,sendReceive; 
+	private int portNum, portNum2; 
+	private CommandData currentCommand; //Currently-executing command
+	private ElevatorSubsystem subsystem; 
 
-	private ArrayList<String[]> errors;
+	private ArrayList<String[]> errors; 
 	private boolean isReady; //Denotes if the elevator is ready to receive a command
 
 
@@ -74,6 +74,9 @@ public class Elevator extends Thread {
 	 *}
 	 */
 
+	/**
+	 * Notifies the scheduler via RPC that the elevator was initialized along with information about the elevator
+	 */
 	public void notifyExists() {
 		try {
 			setReady(true);
@@ -182,6 +185,7 @@ public class Elevator extends Thread {
 		subsystem.handleButtonPressed();
 		System.out.println("Command Processes Elevator moved successfully.\n");
 	}
+	
 	/**
 	 * Send Acknowledgement/Updated state
 	 * Sends and receives messages from and to floor via the scheduler, waiting every time it has to receive
@@ -289,6 +293,10 @@ public class Elevator extends Thread {
 		return currentCommand.getDestFloor();
 	}
 	
+	/**
+	 * Main runnable method
+	 * @param args default
+	 */
 	public static void main(String[] args) {
 		Thread elevator1 = new Elevator(1500,1501);
 		//Thread elevator2 = new Elevator(5070);
@@ -299,7 +307,8 @@ public class Elevator extends Thread {
 		//elevator3.start();
 		//elevator4.start();
 	}
-
+	
+	//Getters and setters
 	public boolean isReady() {
 		return isReady;
 	}
