@@ -152,7 +152,7 @@ public class Floor extends Thread {
 
 
 		//Print out packet content
-		System.out.println("Floor: Sending command to scheduler:");
+		System.out.println("Sending command to scheduler:");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
 			sendReceiveSocket.send(sendCommandPkt);
@@ -162,11 +162,11 @@ public class Floor extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Command sent to scheduler.\n");
+		System.out.println("Command sent to scheduler.\n");
 
 		byte[] data = new byte[5000];
 		receiveReplyPkt = new DatagramPacket(data, data.length);
-		System.out.println("Floor: Waiting for Confirmation.\n");
+		System.out.println("Waiting for Confirmation reply.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -179,7 +179,7 @@ public class Floor extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Received Confirmation.\n");
+		System.out.println("Received Confirmation.\n");
 	}
 
 	/**
@@ -195,7 +195,7 @@ public class Floor extends Thread {
 		}
 
 		//Print out packet content
-		System.out.println("Floor: Requesting For Elevator Update:");
+		System.out.println("Requesting Elevator Update");
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
 			sendRecevAck.send(requestUpdatePkt);
@@ -204,11 +204,11 @@ public class Floor extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Request sent to Scheduler.\n");
+		System.out.println("Request sent to Scheduler.\n");
 
 		byte[] data = new byte[5000];
 		recevUpdatePkt = new DatagramPacket(data, data.length);
-		System.out.println("Floor: Waiting for Reply.\n");
+		System.out.println("Waiting for Reply.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -221,7 +221,7 @@ public class Floor extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Floor: Received Updated. Elevator Responded Successfully!.\n");
+		System.out.println("Received Update. Elevator Responded Successfully!.\n");
 	}
 
 	/**

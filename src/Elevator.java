@@ -5,17 +5,15 @@ import java.util.*;
 /**
  *
  * Elevator that will consumer information from the command list to eventually move 
- * @author Walid Baitul Islam
+ * @author Saffi Ali
  *
  */
 
 
 public class Elevator extends Thread {
-	//public static final long serialVersionUID = 1;
-	
 	DatagramPacket sendInfo,sendRequest,receiveUpdate,sendUpdate,receiveCommand;
 	DatagramSocket sendSocket, receiveSocket,sendInfoSocket,sendReceive;
-	private int portNum;
+	private int portNum, portNum2;
 	private CommandData currentCommand; //Currently-executing commands. Will later be a list of commands
 	private ElevatorSubsystem subsystem;
 
@@ -28,14 +26,13 @@ public class Elevator extends Thread {
 	 *
 	 * @param commands ArrayList<CommandData> list of information that will be consumed
 	 */
-	public Elevator(int port) {
+	public Elevator(int port, int port2) {
 		this.portNum = port;
+		this.portNum2 = port2;
 		currentCommand = null;
 		this.setReady(false);
 		try {
-			// Construct a datagram socket and bind it to port 69
-			// on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
+			// Construct datagram sockets
 			receiveSocket = new DatagramSocket(portNum);
 			sendInfoSocket = new DatagramSocket();
 			sendSocket = new DatagramSocket();
@@ -44,7 +41,7 @@ public class Elevator extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		this.subsystem = new ElevatorSubsystem(this.portNum);
+		this.subsystem = new ElevatorSubsystem(this.portNum2);
 	}
 
 	/**
@@ -55,6 +52,8 @@ public class Elevator extends Thread {
 		readFile();
 		while(true) {
 			sendAndReceive();
+			portNum2++;
+			subsystem.updatePortNum(portNum2);
 			sendAck();
 		}
 	}
@@ -101,7 +100,7 @@ public class Elevator extends Thread {
 
 
 		//Print out packet content
-		System.out.println("Elevator: Sending elevator info to scheduler:");
+		System.out.println("Sending elevator info to scheduler:");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
@@ -111,7 +110,7 @@ public class Elevator extends Thread {
 			System.exit(1);
 		}
 		sendInfoSocket.close();
-		System.out.println("Elevator: Packet sent to scheduler.\n");
+		System.out.println("Info sent to scheduler.\n");
 	}
 
 	/**
@@ -131,7 +130,7 @@ public class Elevator extends Thread {
 		}
 
 		//Print out packet content
-		System.out.println("Elevator: Sending request packet to scheduler:");
+		System.out.println("Requesting command from scheduler:");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
@@ -141,15 +140,20 @@ public class Elevator extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Packet sent to scheduler.\n");
+		System.out.println("Request sent to scheduler.\n");
 
 
 		// Construct a DatagramPacket for receiving floor packets up
 		// to 100 bytes long (the length of the byte array).
 		byte[] tempData = new byte[5000];
 		receiveCommand = new DatagramPacket(tempData, tempData.length);
-		System.out.println("Elevator: Waiting for Command.\n");
+		System.out.println(" Waiting for Command.\n");
 
+		try {
+			sendReceive = new DatagramSocket(portNum2);
+		} catch (SocketException e) {
+			throw new RuntimeException(e);
+		}
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			System.out.println("Waiting..."); // so we know we're waiting
@@ -169,12 +173,14 @@ public class Elevator extends Thread {
 			throw new RuntimeException(e);
 		}
 
-		System.out.println("Elevator: Received Packet.\n");
+		System.out.println("Received Command.\n");
+		System.out.println("Processing Command.\n");
 		subsystem.setCommand(currentCommand);
 
 		//change state here!!
 		subsystem.setDestination(currentCommand.getDestFloor());
 		subsystem.handleButtonPressed();
+		System.out.println("Command Processes Elevator moved successfully.\n");
 	}
 	/**
 	 * Send Acknowledgement/Updated state
@@ -188,7 +194,7 @@ public class Elevator extends Thread {
 			ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
 			ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
 			os.flush();
-			os.writeObject(this);
+			os.writeObject(subsystem);
 			os.flush();
 
 			//retrieves byte array
@@ -204,9 +210,8 @@ public class Elevator extends Thread {
 			throw new RuntimeException(e);
 		}
 
-
 		//Print out packet content
-		System.out.println("Elevator: Sending packet to scheduler:");
+		System.out.println("Sending location update to scheduler\n");
 
 		// Send the datagram packet to the server via the send/receive socket.
 		try {
@@ -216,11 +221,11 @@ public class Elevator extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Packet sent to scheduler.\n");
+		System.out.println("Update sent to scheduler.\n");
 
 		byte[] data = new byte[5000];
 		receiveUpdate = new DatagramPacket(data, data.length);
-		System.out.println("Elevator: Waiting for Confirmation Reply .\n");
+		System.out.println("Waiting for Update Confirmation Reply .\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -233,7 +238,7 @@ public class Elevator extends Thread {
 			System.exit(1);
 		}
 
-		System.out.println("Elevator: Received Confirmation Reply.\n");
+		System.out.println("Received Confirmation From Scheduler.\n");
 	}
 
 	/**
@@ -257,6 +262,9 @@ public class Elevator extends Thread {
 	 */
 	public int getPortNum(){return portNum;}
 
+	/**
+	 * Reads a csv file for errors to trigger
+	 */
 	public void readFile(){
 		errors = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader("errors.csv"))) {
@@ -282,7 +290,7 @@ public class Elevator extends Thread {
 	}
 	
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(1500);
+		Thread elevator1 = new Elevator(1500,1501);
 		//Thread elevator2 = new Elevator(5070);
 		//Thread elevator3 = new Elevator(5071);
 		//Thread elevator4 = new Elevator(5072);

@@ -113,7 +113,7 @@ public class ElevatorSubsystem implements Serializable {
 		//Calculate time to travel between floors and delay for that amount of time
 		try {
 			for (int i = start; i != dest; i += inc) {
-				double seconds = timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + inc, dest);
+				double seconds = Math.max(0, timeToTravel(start, dest) - timeToTravel(start, i) - timeToTravel(i + inc, dest));
 				Thread.sleep((long) (seconds * 1000));
 				curr = i;
 				// Send update message to scheduler
@@ -207,6 +207,10 @@ public class ElevatorSubsystem implements Serializable {
 
 	public int getPortNum(){
 		return portNum;
+	}
+
+	public void updatePortNum(int port){
+		this.portNum = port;
 	}
 	
 	/**
