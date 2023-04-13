@@ -298,14 +298,14 @@ public class Elevator extends Thread {
 	 * @param args default
 	 */
 	public static void main(String[] args) {
-		Thread elevator1 = new Elevator(1500,1501);
-		//Thread elevator2 = new Elevator(5070);
-		//Thread elevator3 = new Elevator(5071);
-		//Thread elevator4 = new Elevator(5072);
+		Thread elevator1 = new Elevator(1500,1700);
+		Thread elevator2 = new Elevator(1600,1800);
+		Thread elevator3 = new Elevator(1900,2000);
+		Thread elevator4 = new Elevator(2100,2200);
 		elevator1.start();
-		//elevator2.start();
-		//elevator3.start();
-		//elevator4.start();
+		elevator2.start();
+		elevator3.start();
+		elevator4.start();
 	}
 	
 	//Getters and setters
