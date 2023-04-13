@@ -22,22 +22,6 @@ import java.net.*;
 class TestElevator {
     private Thread elevator;
     private Thread scheduler;
-    private ElevatorCommands commands;
-
-    private CommandData commandSent;
-
-    DatagramPacket sendPacket;
-
-    @BeforeEach
-    public void setUp(){
-        commands = new ElevatorCommands();
-
-    }
-    @AfterEach
-    public void cleanUp(){
-        elevator.interrupt();
-        scheduler.interrupt();
-    }
 
     @Test
     /**
@@ -45,26 +29,12 @@ class TestElevator {
      */
     void testInitial() {
         scheduler = new Scheduler(67,1);
-        elevator = new Elevator(52);
+        elevator = new Elevator(52, 53);
         elevator.start();
         scheduler.start();
         assertTrue(elevator.isAlive());
         assertTrue(scheduler.isAlive());
-        assertEquals(0,commands.getSize());
 
-    }
-
-    @Test
-    /**
-     * Tests correctness of command send and receive
-     */
-    void testSendAndRecieve() {
-        scheduler = new Scheduler(67,1);
-        elevator = new Elevator(52);
-        scheduler.start();
-        elevator.start();
-        sendCommand();
-        //assertEquals(commandSent,scheduler.getElevatorReturn);
     }
 
     /**
@@ -77,7 +47,8 @@ class TestElevator {
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        commandSent = new CommandData("00.00.01.000",0,9,"up","floor","elevator");
+        CommandData commandSent = new CommandData("00.00.01.000",0,9,"up","floor","elevator");
+        DatagramPacket sendPacket = null;
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
             ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
