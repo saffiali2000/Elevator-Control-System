@@ -34,7 +34,7 @@ commands.csv: CSV file which contains commands as input to the system
 **To start the system, run Scheduler, Elevator, Floor (in order) as separate programs. **  
   
 ### Group Responsibilities  
-Saffi Ali: Total system integration, debugging  
+Saffi Ali: Overall Program functioning, fixing Scheduler, elevator, floor,  bug-fixes/debugging, demo, Class Diagrams
 Atharva Kasture:  Elevator, Error Handling, debugging  
 Henry Lin: Floor, Elevator Thread debugging, fixing tests, readme  
 Ashwin Stoparczyk: Final Report, Command Send Timing, Code Clarity, Bug Fixing, Errors Timing Diagram  
