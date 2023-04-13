@@ -23,7 +23,7 @@ public class Scheduler extends Thread {
 
 	private SendReceiveElevator sendThread;
 
-	private int elevNum;
+	private int elevNum; //Number of Elevators managed by the Scheduler
 
 	private int portNum;
 
@@ -67,8 +67,10 @@ public class Scheduler extends Thread {
 		}
 	}
 
+	/**
+	 * Receives an update from an elevator via UDP
+	 */
 	private void recevElevInfo(){
-
 		byte[] data = new byte[5000];
 		DatagramPacket receiveActiveElev = new DatagramPacket(data, data.length);
 		System.out.println("Waiting for Elevator Info.\n");
@@ -173,7 +175,7 @@ public class Scheduler extends Thread {
 	}
 
 	/**
-	 *
+	 * Scheduler receives an update from a Floor
 	 */
 	public void recevUpdateFloor() {
 		byte[] data = new byte[5000];
@@ -194,6 +196,9 @@ public class Scheduler extends Thread {
 		System.out.println("Received Update Request from floor!.\n");
 	}
 	
+	/**
+	 * Scheduler send an update to the floor subsystem via UDP
+	 */
 	public void sendUpdateFloor(){
 		DatagramPacket sendReply;
 		byte[] sendMsg = "Elevator received Command!".getBytes();
@@ -365,10 +370,16 @@ public class Scheduler extends Thread {
 
 	}
 	
+	//Getter
 	public CommandData getCurrentCommand() {
 		return currentCommand;
 	}
-
+	
+	/**
+	 * Background thread that manages elevator and floor updates
+	 * @author Ashwin Stoparczyk
+	 *
+	 */
 	private class SendReceiveElevator extends Thread {
 		@Override
 		public void run() {
@@ -379,9 +390,14 @@ public class Scheduler extends Thread {
 				}
 			}
 		}
+	
+	/**
+	 * Main runnable method
+	 * @param args default
+	 */
 	public static void main(String[] args) {
 
 		Scheduler scheduler = new Scheduler(23,1);
 		scheduler.start();
 	}
-	}
+}
